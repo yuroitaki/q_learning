@@ -1,4 +1,8 @@
+# use pip to install 'gym' from openAI
 name: rl
 dependencies:
 - numpy
 - matplotlib
+- scipy
+
+
