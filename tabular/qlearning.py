@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from gym.envs.registration import register
 
+'''
 register(
     id='FrozenLakeNotSlippery-v0',
     entry_point='gym.envs.toy_text:FrozenLakeEnv',
@@ -10,7 +11,7 @@ register(
     max_episode_steps=100,
     reward_threshold=0.78, # optimum = .8196
 )
-
+'''
 
 def randomSampling(env,num_episode,game_step):
     
@@ -21,6 +22,7 @@ def randomSampling(env,num_episode,game_step):
         while count <= game_step:
             action = env.action_space.sample()
             new_state, reward, done, info = env.step(action)
+            print(new_state)
             count += 1
             env.render()
             if(done == True):
@@ -85,19 +87,19 @@ def qLearning(env,num_episode,gamma,learning_rate,game_step,punish,discount_nois
 def epsilonGreedy(Q,state,num_episode,episode,max_epsilon,min_epsilon,env):
 
     ########## Linear Decay ###############
-    '''
+    # '''
     use_epsilon = -(episode/num_episode) + max_epsilon
     if(use_epsilon < min_epsilon):
         use_epsilon = min_epsilon
-    ''' 
+    # ''' 
     ########## Exponential Decay ##########
-    # '''
+    '''
     use_epsilon = max_epsilon * (1/(episode+1))
-    # '''
+    '''
     
     rand_num = np.random.uniform(0,1) * (1/(episode+1))
     if(use_epsilon > rand_num):
-        action = np.random.randint(0,env.action_space.n)
+        action = np.random.random_integers(0,3)
     else:
         action = np.argmax(Q[state,:])
         
@@ -169,11 +171,11 @@ def playGame(Q,env,num_episode,game_step):
         
 
 def main():
-    game = "FrozenLakeNotSlippery-v0"
+    game = "CliffWalking-v0" #"FrozenLakeNotSlippery-v0"
     env = gym.make(game)
 
     ###### Random Action Sampling ########
-    '''
+    # '''
     num_epi = 1
     game_cnt = 100
     run_cnt = 1
@@ -182,10 +184,10 @@ def main():
         rewards = randomSampling(env,num_epi,game_cnt)
         avg_rewards = sum(rewards)/num_epi
         print(avg_rewards)
-    '''
+    # '''
     ############ Q-Learning ###############
-    
-    num_episode = 100
+
+    num_episode = 1000
     game_step = 100
     gamma  = 0.9
     learning_rate = 0.8
@@ -196,13 +198,13 @@ def main():
     max_epsilon = 1.0                           # maximum epsilon value which decays linearly with episodes
     min_epsilon = 0.001
 
-    run = 30                                 # Number of runs to train the agent 
+    run = 1                                 # Number of runs to train the agent 
     save = False                            # True to save the picture generated from evalEpisode()
     episode_window = 50                     # size of the window for moving average
     folder = "frozen_lake_not_slippery"
         
     for i in range(run):
-        # '''
+        '''
         (goals, Q) = qLearning(env,num_episode,gamma,learning_rate,game_step,punish,discount_noise,punish_val,diminishing_weight,max_epsilon,min_epsilon)
         avg_score = sum(goals)/num_episode
         print("Average score per episode:", avg_score)
@@ -212,15 +214,15 @@ def main():
         actual_goals = playGame(Q,env,num_episode,game_step)
         actual_avg = sum(actual_goals)/num_episode
         print("Average actual score per episode:", actual_avg)
-        # '''
+        '''
 
         ############## Store the Result ###############
-        # '''
-        filename = "Expo_Epsilon_Decay_Tabular_QLearning_Result_of_{0}_{1}_episodes".format(game,num_episode) 
+        '''
+        filename = "Tabular_QLearning_Result_of_{0}_{1}_episodes".format(game,num_episode) 
         params = [num_episode,gamma,learning_rate,discount_noise,punish,i,avg_score,actual_avg]
         
         writeResult(filename,folder,params,i)
-        # '''
+        '''
         
         ############# Plot the Change of Goal against Episode ####################
         '''
