@@ -93,12 +93,13 @@ class MapEnv:
         
         return (row * self._map_width) + col
 
-    
+
     def reset(self):
 
         self._agent.updateState(self._start_row,self._start_col)
         return self._agent._current_state
 
+    
     def render(self):
         
         for row in range(self._map_length):
@@ -111,6 +112,7 @@ class MapEnv:
                     sys.stdout.write(" ")
             sys.stdout.write("\n")
         sys.stdout.write("\n")
+
         
 def makeMapEnv(map_name,maps=None,start_r=2,start_c=0):
         
