@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from gym.envs.registration import register
 
-'''
+# '''
 register(
     id='FrozenLakeNotSlippery-v0',
     entry_point='gym.envs.toy_text:FrozenLakeEnv',
@@ -11,7 +11,7 @@ register(
     max_episode_steps=100,
     reward_threshold=0.78, # optimum = .8196
 )
-'''
+# '''
 
 def randomSampling(env,num_episode,game_step):
     
@@ -22,9 +22,7 @@ def randomSampling(env,num_episode,game_step):
         while count <= game_step:
             action = env.action_space.sample()
             new_state, reward, done, info = env.step(action)
-            print(new_state)
             count += 1
-            env.render()
             if(done == True):
                 break
         goals.append(reward)
@@ -171,12 +169,12 @@ def playGame(Q,env,num_episode,game_step):
         
 
 def main():
-    game = "CliffWalking-v0" #"FrozenLakeNotSlippery-v0"
+    game = "FrozenLakeNotSlippery-v0" #"CliffWalking-v0" #"FrozenLakeNotSlippery-v0"
     env = gym.make(game)
 
     ###### Random Action Sampling ########
     # '''
-    num_epi = 1
+    num_epi = 1000
     game_cnt = 100
     run_cnt = 1
     
