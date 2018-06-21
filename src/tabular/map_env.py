@@ -1,5 +1,11 @@
 import numpy as np
-import map_agent as ag
+import sys
+from termcolor import cprint
+
+sys.path.append("../")
+import tabular.map_agent as ag
+
+# from src.tabular import map_agent as ag
 
 MAPS = {
     "windy_maze":[
@@ -59,14 +65,16 @@ class MapEnv:
         self._agent.move(action)
         
         return self._trans[state][action]
-        
-    def randomSampling(self):
 
+    
+    def randomSampling(self):
+        
         action = np.random.random_integers(0,self._agent._action_space_n-1)
         return action
+
     
     def endGame(self,mark):
-
+        
         if mark in "XF":
             return True
         else:
@@ -79,7 +87,7 @@ class MapEnv:
             return 1
         else:
             return 0
-    
+
         
     def toState(self,row,col):
         
@@ -90,8 +98,19 @@ class MapEnv:
 
         self._agent.updateState(self._start_row,self._start_col)
         return self._agent._current_state
-        
 
+    def render(self):
+        
+        for row in range(self._map_length):
+            for col in range(self._map_width):
+                if(row == self._agent._current_row) and (col == self._agent._current_col):
+                    cprint(self._maps[row][col],'white','on_magenta',end="")
+                    sys.stdout.write(" ")
+                else:
+                    sys.stdout.write(self._maps[row][col])
+                    sys.stdout.write(" ")
+            sys.stdout.write("\n")
+        sys.stdout.write("\n")
         
 def makeMapEnv(map_name,maps=None,start_r=2,start_c=0):
         
