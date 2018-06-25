@@ -2,10 +2,7 @@ import numpy as np
 import sys
 from termcolor import cprint
 
-sys.path.append("../")
-import tabular.map_agent as ag
-
-# from src.tabular import map_agent as ag
+from tabular import map_agent as ag
 
 MAPS = {
     "windy_maze":[

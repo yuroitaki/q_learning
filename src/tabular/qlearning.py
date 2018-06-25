@@ -40,6 +40,7 @@ def qLearning(env,num_episode,gamma,learning_rate,game_step,punish,discount_nois
         acc_reward = 0
         count = 0
         act_count = 0
+        
         while count <= game_step:
             
             ############### Exploration Strategy ########################
@@ -77,7 +78,7 @@ def qLearning(env,num_episode,gamma,learning_rate,game_step,punish,discount_nois
     print("Final Q Table  =",Q)
     print("Final TD Delta = ",td_delta)
     print("No. of plays under 100 game steps = ",counter)
-    print("Greedy action count =",sum(action_count)/len(action_count),action_count)
+    # print("Greedy action count =",sum(action_count)/len(action_count),action_count)
     env.render()
     return goals, Q
 
