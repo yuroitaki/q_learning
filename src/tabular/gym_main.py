@@ -1,11 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
-from tabular import map_env as me
+import gym
+from gym.envs.registration import register
 from tabular import t_agent as ta
 
+# '''
+register(
+    id='FrozenLakeNotSlippery-v0',
+    entry_point='gym.envs.toy_text:FrozenLakeEnv',
+    kwargs={'map_name' : '4x4', 'is_slippery': False},
+    max_episode_steps=100,
+    reward_threshold=0.78, # optimum = .8196
+)
+# '''
 
-def randomSampling(maze,max_epi,game_step):
+def gymRandom(maze,max_epi,game_step):
     
     goals = []
     
@@ -15,8 +24,8 @@ def randomSampling(maze,max_epi,game_step):
         
         while step_count <= game_step:
             
-            action = maze.randomSampling()
-            new_state, reward, done = maze.step(action)
+            action = maze.action_space.sample()
+            new_state, reward, done, info = maze.step(action)
             step_count += 1
             
             if(done == True):
@@ -24,6 +33,7 @@ def randomSampling(maze,max_epi,game_step):
         goals.append(reward)
         
     return goals
+
 
 
 def playGame(t_agent,maze,game_step):
@@ -34,11 +44,11 @@ def playGame(t_agent,maze,game_step):
         state = maze.reset()
         acc_reward = 0
         step_count = 0
-            
+
         while step_count <= game_step:
 
             action = t_agent.play(state)
-            new_state, reward, done = maze.step(action)
+            new_state, reward, done, info = maze.step(action)
             acc_reward += reward
             state = new_state
             step_count+=1
@@ -98,8 +108,8 @@ def writeResult(filename,folder,params,run):
 
 def main():
 
-    game = "windy_maze" # windy_maze 
-    maze = me.makeMapEnv(game)        # self-created env
+    game = "FrozenLakeNotSlippery-v0"   # FrozenLake-v0  # FrozenLakeNotSlippery-v0  # CliffWalking-v0
+    maze = gym.make(game)               # openAI gym env
     
     ###### Random Action Sampling ########
     '''
@@ -108,7 +118,7 @@ def main():
     run_cnt = 1
     
     for i in range(run_cnt):
-        rewards = randomSampling(maze,num_epi,game_cnt)    # self-created env
+        rewards = gymRandom(maze,num_epi,game_cnt)           # openAI gym env
         avg_rewards = sum(rewards)/num_epi
         print(avg_rewards)
     '''
@@ -117,8 +127,8 @@ def main():
 
     ####### Q Parameters ##########
     
-    obs_n = maze._obs_space_n                      # self-created env
-    act_n = maze._agent._action_space_n   
+    obs_n = maze.observation_space.n               # openAI gym env   
+    act_n = maze.action_space.n
     gamma  = 0.9
     learning_rate = 0.8
     max_epsilon = 1.0                      # maximum epsilon value which decays linearly with episodes
@@ -133,7 +143,7 @@ def main():
     run = 1                                 # Number of runs to train the agent 
     save = False                            # True to save the picture generated from evalEpisode()
     episode_window = 100                     # size of the window for moving average
-    folder = "windy_maze"          # windy_maze 
+    folder = "frozen_lake"           # frozen_lake  # frozen_lake_not_slippery  # cliff_walking
 
     #################################
     # '''
@@ -158,7 +168,7 @@ def main():
                 if(action == np.argmax(t_agent.Q[state,:])):
                     act_count+=1
                     
-                new_state, reward, done = maze.step(action)
+                new_state, reward, done, info = maze.step(action)
                 t_agent.train(new_state,reward,state,action)
                 
                 acc_reward += reward
@@ -176,7 +186,8 @@ def main():
             
         print("Final Q Table  =",t_agent.Q)
         print("No. of plays under {0} game steps = ".format(game_step),done_count)
-        print("Greedy action count =",sum(action_count)/len(action_count),action_count)
+        # print("Greedy action count =",sum(action_count)/len(action_count),action_count)
+        print("Rewards collected:", goals)
         avg_score = sum(goals)/max_episode
         print("Average score per episode:", avg_score)
         maze.render()
@@ -198,12 +209,12 @@ def main():
         # '''
         
         # ############### Plot the Change of Goal against Episode ####################
-        # '''
-        # title = "{0}th_Tabular_QLearning_Result_of_{1}_{2}_episodes".format(i,game,max_episode)
-        # # goals = [1,2,3,4,5,6]
-        # evalEpisode(goals,max_episode,episode_window,title,save,folder)
-        
-        # '''
+        '''
+        title = "{0}th_Tabular_QLearning_Result_of_{1}_{2}_episodes".format(i,game,max_episode)
+        # goals = [1,2,3,4,5,6]
+        evalEpisode(goals,max_episode,episode_window,title,save,folder)
+        '''
+
 
  
 if __name__ == "__main__":
