@@ -121,18 +121,20 @@ def main():
     act_n = maze._agent._action_space_n   
     gamma  = 0.9
     learning_rate = 0.8
+    
     max_epsilon = 1.0                      # maximum epsilon value which decays linearly with episodes
     min_epsilon = 0.001
-    discount_noise = False                # False to use epsilon-greedy
-    diminishing_weight = True              # False to not use the discounted weight for noise in late episodes
+    discount_noise = False                 # "epsilon" to use epsilon-greedy, False to use count
+    diminishing_weight = True             # False to not use the discounted weight for noise in late episodes
+    count_const = 0.9                     # count-based exploration constant for exploration bonus
     
     ####### Experiment Freq ######
     
-    max_episode = 1000
+    max_episode = 50000
     game_step = 100
     run = 1                                 # Number of runs to train the agent 
     save = False                            # True to save the picture generated from evalEpisode()
-    episode_window = 100                     # size of the window for moving average
+    episode_window = 50                     # size of the window for moving average
     folder = "windy_maze"          # windy_maze 
 
     #################################
@@ -159,7 +161,8 @@ def main():
                     act_count+=1
                     
                 new_state, reward, done = maze.step(action)
-                t_agent.train(new_state,reward,state,action)
+                # t_agent.train(new_state,reward,state,action)       # normal training
+                t_agent.count_train(new_state,reward,state,action,count_const)         # count-based training
                 
                 acc_reward += reward
                 state = new_state
@@ -175,8 +178,9 @@ def main():
         ########## Result for Each Training Run #############
             
         print("Final Q Table  =",t_agent.Q)
+        print("Final Count Table  =",t_agent.visit_count)
         print("No. of plays under {0} game steps = ".format(game_step),done_count)
-        print("Greedy action count =",sum(action_count)/len(action_count),action_count)
+        # print("Greedy action count =",sum(action_count)/len(action_count),action_count)
         avg_score = sum(goals)/max_episode
         print("Average score per episode:", avg_score)
         maze.render()
@@ -197,13 +201,13 @@ def main():
         # writeResult(filename,folder,params,i)
         # '''
         
-        # ############### Plot the Change of Goal against Episode ####################
-        # '''
-        # title = "{0}th_Tabular_QLearning_Result_of_{1}_{2}_episodes".format(i,game,max_episode)
-        # # goals = [1,2,3,4,5,6]
-        # evalEpisode(goals,max_episode,episode_window,title,save,folder)
+        ############### Plot the Change of Goal against Episode ####################
+        '''
+        title = "{0}th_Tabular_QLearning_Result_of_{1}_{2}_episodes".format(i,game,max_episode)
+        # goals = [1,2,3,4,5,6]
+        evalEpisode(goals,max_episode,episode_window,title,save,folder)
         
-        # '''
+        '''
 
  
 if __name__ == "__main__":

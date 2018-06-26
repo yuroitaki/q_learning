@@ -3,9 +3,11 @@ import numpy as np
 class Tabular_Q_Agent:
 
     def __init__(self,gamma,learning_rate,obs_n,act_n,max_epsilon,min_epsilon,discount_noise,diminishing_weight,max_epi):
-        
+
+        self.max_epi = max_epi
         self.obs_n = obs_n
         self.act_n = act_n
+        
         self.Q = np.zeros([obs_n,act_n])
         self.gamma = gamma
         self.learning_rate = learning_rate
@@ -13,8 +15,9 @@ class Tabular_Q_Agent:
         self.min_epsilon = min_epsilon
         self.discount_noise = discount_noise
         self.diminishing_weight = diminishing_weight
-        self.max_epi = max_epi
 
+        self.visit_count = np.zeros([obs_n,act_n])
+        
 
     def act(self,state,episode):
 
@@ -22,9 +25,12 @@ class Tabular_Q_Agent:
             action = np.argmax(self.Q[state,:]+np.random.randn(1,self.act_n)*(1/(episode+1)))
         elif self.discount_noise == True and self.diminishing_weight == False:
             action = np.argmax(self.Q[state,:]+np.random.randn(1,self.act_n))
-        else:
+        elif self.discount_noise == "epsilon":
             action = self.epsilonGreedy(state,episode)
-                
+        else:
+            action = self.play(state)
+            
+        self.visit_count[state,action] += 1
         return action    
         
 
@@ -35,8 +41,18 @@ class Tabular_Q_Agent:
         self.Q[state,action] += self.learning_rate*(td_delta)
         
         return td_delta
-        
 
+
+    def count_train(self,new_state,reward,state,action,const):
+
+        exploration_bonus  = const / np.sqrt(self.visit_count[state,action]+1)
+        optimal_Q = np.max(self.Q[new_state,:])
+        td_delta = reward + exploration_bonus + self.gamma*(optimal_Q) - self.Q[state,action]
+        self.Q[state,action] += self.learning_rate*(td_delta)
+        
+        return td_delta
+
+    
     def epsilonGreedy(self,state,episode):
 
         ########## Linear Decay ###############
