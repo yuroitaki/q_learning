@@ -2,7 +2,8 @@ import numpy as np
 
 class Tabular_Q_Agent:
 
-    def __init__(self,gamma,learning_rate,obs_n,act_n,max_epsilon,min_epsilon,discount_noise,diminishing_weight,max_epi):
+    def __init__(self,gamma,learning_rate,obs_n,act_n,max_epsilon,
+                 min_epsilon,discount_noise,diminishing_weight,max_epi):
 
         self.max_epi = max_epi
         self.obs_n = obs_n
@@ -17,8 +18,9 @@ class Tabular_Q_Agent:
         self.diminishing_weight = diminishing_weight
 
         self.visit_count = np.zeros([obs_n,act_n])
-        
+        self.reward = [[[] for action in range(self.act_n)] for state in range(self.obs_n)]
 
+        
     def act(self,state,episode):
 
         if self.discount_noise == True and self.diminishing_weight == True:
@@ -29,7 +31,7 @@ class Tabular_Q_Agent:
             action = self.epsilonGreedy(state,episode)
         else:
             action = self.play(state)
-            
+
         self.visit_count[state,action] += 1
         return action    
         
@@ -45,12 +47,31 @@ class Tabular_Q_Agent:
 
     def count_train(self,new_state,reward,state,action,const):
 
-        exploration_bonus  = const / np.sqrt(self.visit_count[state,action]+1)
+        exploration_bonus  = const / np.sqrt(self.visit_count[state,action])
         optimal_Q = np.max(self.Q[new_state,:])
         td_delta = reward + exploration_bonus + self.gamma*(optimal_Q) - self.Q[state,action]
         self.Q[state,action] += self.learning_rate*(td_delta)
         
         return td_delta
+
+    
+    def model_train(self,new_state,reward,state,action,const):
+
+        exploration_bonus  = const / np.sqrt(self.visit_count[state,action])
+        mean_reward = self.calcAvgReward(reward,state,action)
+        optimal_Q = np.max(self.Q[new_state,:])
+        td_delta = mean_reward + exploration_bonus + self.gamma*(optimal_Q) - self.Q[state,action]
+        # td_delta = mean_reward + self.gamma*(optimal_Q) - self.Q[state,action]
+        self.Q[state,action] += self.learning_rate*(td_delta)
+
+        return td_delta
+
+    
+    def calcAvgReward(self,im_reward,state,action):
+        
+        self.reward[state][action].append(im_reward)
+        mean_r = sum(self.reward[state][action])/self.visit_count[state,action]
+        return mean_r
 
     
     def epsilonGreedy(self,state,episode):

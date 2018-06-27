@@ -119,8 +119,8 @@ def main():
     
     obs_n = maze._obs_space_n                      # self-created env
     act_n = maze._agent._action_space_n   
-    gamma  = 0.9
-    learning_rate = 0.8
+    gamma  = 0.8                          # 0.9 for gauss,epsilon
+    learning_rate = 0.5                   # 0.8 for gauss, epsilon
     
     max_epsilon = 1.0                      # maximum epsilon value which decays linearly with episodes
     min_epsilon = 0.001
@@ -130,17 +130,22 @@ def main():
     
     ####### Experiment Freq ######
     
-    max_episode = 50000
+    max_episode = 1000
     game_step = 100
     run = 1                                 # Number of runs to train the agent 
     save = False                            # True to save the picture generated from evalEpisode()
     episode_window = 50                     # size of the window for moving average
-    folder = "windy_maze"          # windy_maze 
+    folder = "windy_maze"                   # windy_maze 
 
     #################################
-    # '''
-    t_agent = ta.Tabular_Q_Agent(gamma,learning_rate,obs_n,act_n,max_epsilon,min_epsilon,discount_noise,diminishing_weight,max_episode)
 
+    t_agent = ta.Tabular_Q_Agent(gamma,learning_rate,obs_n,act_n,
+                                 max_epsilon,min_epsilon,discount_noise,
+                                 diminishing_weight,max_episode)
+    # '''
+    # t_agent.Q[t_agent.Q == 0] = 1/(1-gamma)           # to use OFU principle for initialisation
+    t_agent.Q[t_agent.Q == 0] = 0.4
+    
     for i in range(run):
 
         goals = []                          # accumulation of rewards
@@ -162,7 +167,10 @@ def main():
                     
                 new_state, reward, done = maze.step(action)
                 # t_agent.train(new_state,reward,state,action)       # normal training
-                t_agent.count_train(new_state,reward,state,action,count_const)         # count-based training
+                # t_agent.count_train(new_state,reward,state,action,count_const)         # count-based training
+                t_agent.model_train(new_state,reward,state,action,count_const)         # model-based training
+                
+                # print(t_agent.Q)
                 
                 acc_reward += reward
                 state = new_state
@@ -177,10 +185,10 @@ def main():
 
         ########## Result for Each Training Run #############
             
-        print("Final Q Table  =",t_agent.Q)
-        print("Final Count Table  =",t_agent.visit_count)
+        print("Final Q Table  = \n",t_agent.Q)
+        print("Final Count Table  = \n",t_agent.visit_count)
         print("No. of plays under {0} game steps = ".format(game_step),done_count)
-        # print("Greedy action count =",sum(action_count)/len(action_count),action_count)
+        print("Average greedy action per epi =",sum(action_count)/max_episode)
         avg_score = sum(goals)/max_episode
         print("Average score per episode:", avg_score)
         maze.render()
@@ -202,12 +210,12 @@ def main():
         # '''
         
         ############### Plot the Change of Goal against Episode ####################
-        '''
-        title = "{0}th_Tabular_QLearning_Result_of_{1}_{2}_episodes".format(i,game,max_episode)
-        # goals = [1,2,3,4,5,6]
-        evalEpisode(goals,max_episode,episode_window,title,save,folder)
+        # '''
+        # title = "{0}th_Tabular_QLearning_Result_of_{1}_{2}_episodes".format(i,game,max_episode)
+        # # goals = [1,2,3,4,5,6]
+        # evalEpisode(goals,max_episode,episode_window,title,save,folder)
         
-        '''
+        # '''
 
  
 if __name__ == "__main__":

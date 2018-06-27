@@ -147,7 +147,9 @@ def main():
 
     #################################
     # '''
-    t_agent = ta.Tabular_Q_Agent(gamma,learning_rate,obs_n,act_n,max_epsilon,min_epsilon,discount_noise,diminishing_weight,max_episode)
+    t_agent = ta.Tabular_Q_Agent(gamma,learning_rate,obs_n,
+                                 act_n,max_epsilon,min_epsilon,discount_noise,
+                                 diminishing_weight,max_episode)
 
     for i in range(run):
 
