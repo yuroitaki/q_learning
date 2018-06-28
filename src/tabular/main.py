@@ -98,7 +98,7 @@ def writeResult(filename,folder,params,run):
 
 def main():
 
-    game = "windy_maze" # windy_maze 
+    game = "hard_windy_maze" # windy_maze   # hard_windy_maze
     maze = me.makeMapEnv(game)        # self-created env
     
     ###### Random Action Sampling ########
@@ -119,18 +119,18 @@ def main():
     
     obs_n = maze._obs_space_n                      # self-created env
     act_n = maze._agent._action_space_n   
-    gamma  = 0.8                          # 0.9 for gauss,epsilon
-    learning_rate = 0.5                   # 0.8 for gauss, epsilon
+    gamma  = 0.9                          # 0.9 for gauss,epsilon
+    learning_rate = 0.8                   # 0.8 for gauss, epsilon
     
     max_epsilon = 1.0                      # maximum epsilon value which decays linearly with episodes
     min_epsilon = 0.001
-    discount_noise = False                 # "epsilon" to use epsilon-greedy, False to use count
+    discount_noise = "epsilon"                 # "epsilon" to use epsilon-greedy, False to use greedy
     diminishing_weight = True             # False to not use the discounted weight for noise in late episodes
-    count_const = 0.9                     # count-based exploration constant for exploration bonus
+    beta = 0.9                             # count-based exploration constant for exploration bonus
     
     ####### Experiment Freq ######
     
-    max_episode = 1000
+    max_episode = 2000
     game_step = 100
     run = 1                                 # Number of runs to train the agent 
     save = False                            # True to save the picture generated from evalEpisode()
@@ -142,9 +142,10 @@ def main():
     t_agent = ta.Tabular_Q_Agent(gamma,learning_rate,obs_n,act_n,
                                  max_epsilon,min_epsilon,discount_noise,
                                  diminishing_weight,max_episode)
+
     # '''
     # t_agent.Q[t_agent.Q == 0] = 1/(1-gamma)           # to use OFU principle for initialisation
-    t_agent.Q[t_agent.Q == 0] = 0.4
+    t_agent.Q[t_agent.Q == 0] = 1.0
     
     for i in range(run):
 
@@ -162,13 +163,13 @@ def main():
             while step_count <= game_step:
 
                 action = t_agent.act(state,episode)
-                if(action == np.argmax(t_agent.Q[state,:])):
-                    act_count+=1
+                # if(action == np.argmax(t_agent.Q[state,:])):
+                #     act_count+=1
                     
                 new_state, reward, done = maze.step(action)
                 # t_agent.train(new_state,reward,state,action)       # normal training
-                # t_agent.count_train(new_state,reward,state,action,count_const)         # count-based training
-                t_agent.model_train(new_state,reward,state,action,count_const)         # model-based training
+                t_agent.count_train(new_state,reward,state,action,beta)         # count-based training
+                # t_agent.model_train(new_state,reward,state,action,beta)         # model-based training
                 
                 # print(t_agent.Q)
                 
@@ -188,7 +189,7 @@ def main():
         print("Final Q Table  = \n",t_agent.Q)
         print("Final Count Table  = \n",t_agent.visit_count)
         print("No. of plays under {0} game steps = ".format(game_step),done_count)
-        print("Average greedy action per epi =",sum(action_count)/max_episode)
+        # print("Average greedy action per epi =",sum(action_count)/max_episode)
         avg_score = sum(goals)/max_episode
         print("Average score per episode:", avg_score)
         maze.render()
@@ -199,7 +200,7 @@ def main():
         actual_avg = sum(actual_goals)/max_episode
         print("Average actual score per episode:", actual_avg)
         
-        # '''
+        '''
 
         ############## Store the Result ###############
         # '''
@@ -211,9 +212,9 @@ def main():
         
         ############### Plot the Change of Goal against Episode ####################
         # '''
-        # title = "{0}th_Tabular_QLearning_Result_of_{1}_{2}_episodes".format(i,game,max_episode)
-        # # goals = [1,2,3,4,5,6]
-        # evalEpisode(goals,max_episode,episode_window,title,save,folder)
+        title = "{0}th_Tabular_QLearning_Result_of_{1}_{2}_episodes".format(i,game,max_episode)
+        # goals = [1,2,3,4,5,6]
+        evalEpisode(goals,max_episode,episode_window,title,save,folder)
         
         # '''
 
