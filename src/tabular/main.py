@@ -85,11 +85,12 @@ def calcMovingAverage(score,episode_window):
     return y
 
     
-def writeResult(filename,folder,params,run):
+def writeResult(filename,folder,params,string_param,run):
     
     with open("/vol/bitbucket/ttc14/thesis/result/{0}/{1}.txt".format(folder,filename),"a+") as f:
         if(run==0):
-            f.write("no_of_episodes gamma learning_rate discount_noise punish ith_run avg_score actual_avg\n")
+            f.write(string_param)
+            f.write("\n")
         for item in params:
             f.write(str(item))
             f.write(" ")
@@ -98,7 +99,7 @@ def writeResult(filename,folder,params,run):
 
 def main():
 
-    game = "windy_maze" # windy_maze   # hard_windy_maze
+    game = "hard_windy_maze" # windy_maze   # hard_windy_maze
     maze = me.makeMapEnv(game)        # self-created env
     
     ###### Random Action Sampling ########
@@ -124,10 +125,13 @@ def main():
     
     max_epsilon = 1.0                      # maximum epsilon value which decays linearly with episodes
     min_epsilon = 0.001
-    discount_noise = "risk"                 # "epsilon" to use epsilon-greedy, False to use greedy
+    discount_noise = "epsilon"                 # "epsilon" to use epsilon-greedy, False to use greedy
     diminishing_weight = True             # False to not use the discounted weight for noise in late episodes
-    beta = 0.9                             # count-based exploration constant for exploration bonus
-    risk_level = 0.1                       # risk seeking level for risk training
+
+    beta = 0.3                             # count-based exploration constant for exploration bonus
+    risk_level = 0.2                       # risk seeking level for risk training
+    initial_Q = 0.4                       # used 0.0 for risk seeking and epsilon
+    initial_M = 1.0
     
     ####### Experiment Freq ######
     
@@ -136,7 +140,7 @@ def main():
     run = 1                                 # Number of runs to train the agent 
     save = False                            # True to save the picture generated from evalEpisode()
     episode_window = 50                     # size of the window for moving average
-    folder = "windy_maze"                   # windy_maze 
+    folder = "hard_windy_maze"                   # windy_maze 
 
     #################################
 
@@ -146,20 +150,21 @@ def main():
 
     # '''
     # t_agent.Q[t_agent.Q == 0] = 1/(1-gamma)           # to use OFU principle for initialisation
-    t_agent.Q[t_agent.Q == 0] = 0.0
+    t_agent.Q[t_agent.Q == 0] = initial_Q
+    t_agent.M[t_agent.M == 0] = initial_M
     
     for i in range(run):
 
         goals = []                          # accumulation of rewards
         done_count  = 0                     # freq of task completion / elimination below max game steps
-        action_count = []                   # freq of greedy actions
+        # action_count = []                   # freq of greedy actions
 
         for episode in range(max_episode):
             
             state = maze.reset()
             acc_reward = 0
             step_count = 0
-            act_count = 0
+            # act_count = 0
             
             while step_count <= game_step:
 
@@ -169,8 +174,8 @@ def main():
                     
                 new_state, reward, done = maze.step(action)
                 # t_agent.train(new_state,reward,state,action)       # normal training
-                # t_agent.count_train(new_state,reward,state,action,beta)         # count-based training
-                t_agent.risk_train(new_state,reward,state,action,risk_level)      # risk-seeking training
+                t_agent.count_train(new_state,reward,state,action,beta)         # count-based training
+                # t_agent.risk_train(new_state,reward,state,action,risk_level)      # risk-seeking training
                 
                 acc_reward += reward
                 state = new_state
@@ -181,12 +186,12 @@ def main():
                     break
                 
             goals.append(acc_reward)
-            action_count.append(act_count)
+            # action_count.append(act_count)
 
         ########## Result for Each Training Run #############
             
         print("Final Q Table  = \n",t_agent.Q)
-        print("Final U Table  = \n",t_agent.U)
+        # print("Final U Table  = \n",t_agent.U)
         print("Final Count Table  = \n",t_agent.visit_count)
         print("No. of plays under {0} game steps = ".format(game_step),done_count)
         # print("Average greedy action per epi =",sum(action_count)/max_episode)
@@ -204,10 +209,20 @@ def main():
 
         ############## Store the Result ###############
         # '''
-        # filename = "Tabular_QLearning_Result_of_{0}_{1}_episodes".format(game,max_episode) 
-        # params = [max_episode,gamma,learning_rate,discount_noise,i,avg_score,actual_avg]
+        exploration = "count" # epsilon # count # risk
+        filename = "{0}_Tabular_QLearning_Result_of_{1}_{2}_episodes".format(exploration,game,max_episode)
         
-        # writeResult(filename,folder,params,i)
+        if exploration == "count":
+            params = [max_episode,gamma,learning_rate,beta,initial_Q,i,avg_score,actual_avg]
+            string_param = "max_episode,gamma,learning_rate,beta,initial_Q,i,avg_score,actual_avg"
+        elif exploration == "risk":
+            params = [max_episode,gamma,learning_rate,risk_level,initial_Q,initial_M,i,avg_score,actual_avg]
+            string_param = "max_episode,gamma,learning_rate,risk_level,initial_Q,initial_M,i,avg_score,actual_avg"
+        elif exploration == "epsilon":
+            params = [max_episode,gamma,learning_rate,max_epsilon,min_epsilon,initial_Q,i,avg_score,actual_avg]
+            string_param = "max_episode,gamma,learning_rate,max_epsilon,min_epsilon,initial_Q,i,avg_score,actual_avg"
+
+        writeResult(filename,folder,params,string_param,i)
         # '''
         
         ############### Plot the Change of Goal against Episode ####################

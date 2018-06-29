@@ -65,7 +65,7 @@ class Tabular_Q_Agent:
         delta_M = (reward**2) + (2*self.gamma*reward*(optimal_Q)) + ((self.gamma**2)*optimal_M) - self.M[state,action]
         self.M[state,action] += self.learning_rate*(delta_M)
 
-        self.U[state,action] = self.Q[state,action] + risk_level*(self.M[state,action] - (self.Q[state,action]**2))
+        self.U[state,action] = self.Q[state,action] + risk_level*(max(0,self.M[state,action] - (self.Q[state,action]**2)))
         
     
     ####### Count-Based Exploration Bonus ###########
