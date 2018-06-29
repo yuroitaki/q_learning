@@ -18,6 +18,9 @@ class Tabular_Q_Agent:
         self.diminishing_weight = diminishing_weight
 
         self.visit_count = np.zeros([obs_n,act_n])
+        self.M = np.zeros([obs_n,act_n])
+        self.U = np.zeros([obs_n,act_n])
+        
         #self.reward = [[[] for action in range(self.act_n)] for state in range(self.obs_n)]
 
         
@@ -27,8 +30,11 @@ class Tabular_Q_Agent:
             action = np.argmax(self.Q[state,:]+np.random.randn(1,self.act_n)*(1/(episode+1)))
         elif self.discount_noise == True and self.diminishing_weight == False:
             action = np.argmax(self.Q[state,:]+np.random.randn(1,self.act_n))
+            
         elif self.discount_noise == "epsilon":
             action = self.epsilonGreedy(state,episode)
+        elif self.discount_noise == "risk":
+            action = self.optimalAction_U(state)    
         else:
             action = self.optimalAction(state)          # greedy approach
 
@@ -38,14 +44,31 @@ class Tabular_Q_Agent:
 
     def train(self,new_state,reward,state,action):
         
-        optimal_Q = np.max(self.Q[new_state,:])
+        optimal_a = np.max(self.U[new_state,:])
         td_delta = reward + self.gamma*(optimal_Q) - self.Q[state,action]
         self.Q[state,action] += self.learning_rate*(td_delta)
         
         return td_delta
 
+    
+    ####### Risk Seeking Exploration ###########
+    
+    def risk_train(self,new_state,reward,state,action,risk_level):
+        
+        new_action = self.optimalAction_U(new_state)
+        
+        optimal_Q = self.Q[new_state,new_action]
+        delta_Q = reward + self.gamma*(optimal_Q) - self.Q[state,action]
+        self.Q[state,action] += self.learning_rate*(delta_Q)
 
-    ####### with Exploration Bonus ###########
+        optimal_M = self.M[new_state,new_action]
+        delta_M = (reward**2) + (2*self.gamma*reward*(optimal_Q)) + ((self.gamma**2)*optimal_M) - self.M[state,action]
+        self.M[state,action] += self.learning_rate*(delta_M)
+
+        self.U[state,action] = self.Q[state,action] + risk_level*(self.M[state,action] - (self.Q[state,action]**2))
+        
+    
+    ####### Count-Based Exploration Bonus ###########
     
     def count_train(self,new_state,reward,state,action,beta):
 
@@ -56,7 +79,9 @@ class Tabular_Q_Agent:
         
         return td_delta
 
-        
+
+    ########### Epsilon Greedy ################
+    
     def epsilonGreedy(self,state,episode):
 
         ########## Linear Decay ###############
@@ -99,6 +124,24 @@ class Tabular_Q_Agent:
         rand = np.random.choice(index_list)
         return rand
 
+    
+    def optimalAction_U(self,state):
+
+        max_U = max(self.U[state,:])
+        index = 0
+        index_list = []
+        
+        for a in self.U[state,:]:
+            if max_U == a:
+                index_list.append(index)
+            index += 1
+
+        rand = np.random.choice(index_list)
+        return rand
+
+    
+
+    
     ####### Model-Based Training with only mean reward, no mean transition, not functioning ########
     
     def model_train(self,new_state,reward,state,action,beta):
