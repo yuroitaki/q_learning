@@ -5,7 +5,7 @@ from tabular import helper as hp
 
 def main():
 
-    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze
+    game = "windy_maze"          # windy_maze   # hard_windy_maze
     maze = me.makeMapEnv(game) 
 
     ####### Q Parameters ##########
@@ -14,24 +14,25 @@ def main():
     act_n = maze._agent._action_space_n   
     gamma  = 0.9                          # 0.9 for gauss,epsilon
     learning_rate = 0.8                   # 0.8 for gauss, epsilon
-    exploration = "risk"                    # epsilon # count # risk
-    discount_noise = "epsilon_lin"           # "epsilon_lin/epsilon_exp", "risk", True (gauss), False (greedy)    
+    exploration = "epsilon"                    # epsilon # count # risk
+    discount_noise = True           # "epsilon_lin/epsilon_exp", "risk", True (gauss), False (greedy)    
     max_epsilon = 1.0                      # maximum epsilon value which decays with episodes
     min_epsilon = 0.001
     diminishing_weight = True            # False to not use the discounted weight for noise in late episodes
 
     beta_cnt_based = 0.3                      # count-based exploration constant for exploration bonus
     risk_level = 0.2                       # risk seeking level for risk training
-    initial_Q = 0.4                       # used 0.0 for risk seeking and epsilon, 0.4 for count
+    initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.4 for count
     initial_M = 1.0                       # an example uses 1/(1-gamma) for initial_Q
     
     ####### Experiments & Records ######
 
     param_set = ""                          # alphanumeric number to record different sets of params used
-    max_episode = 100
+    max_episode = 1000
     run = 10                                 # Number of runs to train the agent
-    episode_window = 50                     # size of the window for moving average
+    episode_window = 500                     # size of the window for moving average
     game_step = 100
+    conf_lvl = 0.95                         # confidence level for confidence interval result plotting
     
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
@@ -62,7 +63,7 @@ def main():
     t_agent.Q[t_agent.Q == 0] = initial_Q
     t_agent.M[t_agent.M == 0] = initial_M
 
-    goal_run = []                          # accumulation of "goals" across multiple runs
+    mov_avg_run = []                          # accumulation of "goals" across multiple runs
     
     for run_cnt in range(run):
 
@@ -144,17 +145,21 @@ def main():
         # hp.writeResult(filename,folder,params,string_param,run_cnt)
         # hp.storeTable(filename,folder,table,table_param,run_cnt)
         
-        # ############### Plot the Change of Goal against Episode ####################
+        # ############### Calc the Moving Average of Rewards ####################
 
-        # hp.evalEpisode(goals,max_episode,episode_window,filename,save,folder)
-
+        mov_avg = hp.calcMovingAverage(goals,episode_window)
+        mov_avg_run.append(mov_avg)
+        
         ############################################################################
-                                        
-        goal_run.append(goals)
-                                    
+
     ########################### End of Multiple Runs ########################################
 
+    conf_mov_avg = hp.confInterval(mov_avg_run,conf_lvl)
+    mean = [result[0] for result in conf_mov_avg]
+    lower_bound = [result[1] for result in conf_mov_avg]
+    upper_bound = [result[2] for result in conf_mov_avg]
     
+    hp.evalEpisode(mean,lower_bound,upper_bound,max_episode,episode_window,filename,save,folder)
 
                                         
                                         

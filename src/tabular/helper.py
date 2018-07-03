@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import scipy.stats as st
+import numpy as np
 
 def playGame(t_agent,maze,game_step,mode="play"):
     
@@ -27,12 +29,13 @@ def playGame(t_agent,maze,game_step,mode="play"):
     return goals
         
 
-def evalEpisode(score,num_episode,episode_window,title,save,folder):
-    
-    y = calcMovingAverage(score,episode_window)
+def evalEpisode(mean,lower_bound,upper_bound,num_episode,episode_window,title,save,folder):
+
     x = [i for i in range(episode_window-1,num_episode)]
     fig = plt.figure(figsize=(32,16))
-    plt.scatter(x,y,marker='x')
+    plt.scatter(x,mean,marker='x',c='b')
+    plt.scatter(x,lower_bound,marker='o',c='r')
+    plt.scatter(x,upper_bound,marker='*',c='g')
     plt.title(title,fontweight='bold')
     plt.xlabel("Episode No.")
     plt.ylabel("Moving Average Score")
@@ -85,3 +88,28 @@ def storeTable(filename,folder,table,table_param,run):
             f.write(str(item))
             f.write("\n")
         f.write("\n\n\n")
+
+
+def confInterval(goal_run,conf_lvl):
+
+    goal_len = len(goal_run[0])
+    mean_conf_goal = []
+    
+    for i in range(goal_len):
+        series_reward = []
+        
+        for j in range(len(goal_run)):
+            series_reward.append(goal_run[j][i])
+            
+        mean = np.mean(series_reward)
+        sem = st.sem(series_reward)
+        upper, lower = st.t.interval(conf_lvl,goal_len-1,loc=mean,scale=sem)
+
+        mean_conf_goal.append((mean,upper,lower))
+
+    return mean_conf_goal
+
+        
+    
+
+    
