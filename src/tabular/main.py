@@ -11,9 +11,11 @@ def main():
     ####### Q Parameters ##########
     
     obs_n = maze._obs_space_n
-    act_n = maze._agent._action_space_n   
+    act_n = maze._agent._action_space_n
+    
     gamma  = 0.9                          # 0.9 for gauss,epsilon
     learning_rate = 0.8                   # 0.8 for gauss, epsilon
+    
     exploration = "epsilon"                    # epsilon # count # risk
     discount_noise = True           # "epsilon_lin/epsilon_exp", "risk", True (gauss), False (greedy)    
     max_epsilon = 1.0                      # maximum epsilon value which decays with episodes
@@ -25,19 +27,25 @@ def main():
     initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.4 for count
     initial_M = 1.0                       # an example uses 1/(1-gamma) for initial_Q
     
-    ####### Experiments & Records ######
+    ######### Experiments & Records #########
 
     param_set = ""                          # alphanumeric number to record different sets of params used
-    max_episode = 1000
+    max_episode = 100
     run = 10                                 # Number of runs to train the agent
-    episode_window = 500                     # size of the window for moving average
     game_step = 100
-    conf_lvl = 0.95                         # confidence level for confidence interval result plotting
     
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
     game_type = "deterministic"              # deterministic  # stochastic
     filename = "{}_{}_exploration_{}_episodes_type_{}".format(game_type,exploration,max_episode,param_set)
+
+    ####### Moving Average Graph Plotting #######
+
+    episode_window = 1                     # size of the window for moving average
+    max_reward = 1.0
+    max_r = 1.2                           # upper y bound
+    min_r = 0.0                           # lower y bound
+    conf_lvl = 0.95                         # confidence level for confidence interval result plotting
     
     ########################################
 
@@ -100,19 +108,19 @@ def main():
 
         ########## Result for Each Training Run #############
             
-        print("Final Q Table  = \n",t_agent.Q)
+        # print("Final Q Table  = \n",t_agent.Q)
         # print("Final U Table  = \n",t_agent.U)
-        print("Final Count Table  = \n",t_agent.visit_count)
-        print("No. of plays under {0} game steps = ".format(game_step),done_count)
+        # print("Final Count Table  = \n",t_agent.visit_count)
+        # print("No. of plays under {0} game steps = ".format(game_step),done_count)
         avg_score = sum(goals)/max_episode
-        print("Average score per episode:", avg_score)
+        # print("Average score per episode:", avg_score)
         maze.render()
 
         ############ Using Final Q Table to Play Games without further Update ##################
 
         actual_goals = hp.playGame(t_agent,maze,game_step)
         actual_avg = sum(actual_goals)/max_episode
-        print("Average actual score per episode:", actual_avg)
+        # print("Average actual score per episode:", actual_avg)
         
         # '''
 
@@ -150,16 +158,16 @@ def main():
         mov_avg = hp.calcMovingAverage(goals,episode_window)
         mov_avg_run.append(mov_avg)
         
+        # hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     # to print the current run mov avg
+        
         ############################################################################
 
     ########################### End of Multiple Runs ########################################
 
-    conf_mov_avg = hp.confInterval(mov_avg_run,conf_lvl)
-    mean = [result[0] for result in conf_mov_avg]
-    lower_bound = [result[1] for result in conf_mov_avg]
-    upper_bound = [result[2] for result in conf_mov_avg]
+    mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
     
-    hp.evalEpisode(mean,lower_bound,upper_bound,max_episode,episode_window,filename,save,folder)
+    hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
+                   max_episode,episode_window,filename,save,folder)
 
                                         
                                         

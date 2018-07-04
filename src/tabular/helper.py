@@ -27,15 +27,29 @@ def playGame(t_agent,maze,game_step,mode="play"):
         goals.append(acc_reward)
         
     return goals
-        
 
-def evalEpisode(mean,lower_bound,upper_bound,num_episode,episode_window,title,save,folder):
+
+def evalEpisode(goals,num_episode,episode_window,title):
 
     x = [i for i in range(episode_window-1,num_episode)]
     fig = plt.figure(figsize=(32,16))
-    plt.scatter(x,mean,marker='x',c='b')
-    plt.scatter(x,lower_bound,marker='o',c='r')
-    plt.scatter(x,upper_bound,marker='*',c='g')
+
+    plt.scatter(x,goals,marker='x',c='r')
+    plt.title(title,fontweight='bold')
+    plt.xlabel("Episode No.")
+    plt.ylabel("Moving Average Score")
+    plt.show()
+    plt.close()
+
+
+
+def avgEvalEpisode(mean,interval_size,max_r,min_r,num_episode,episode_window,title,save,folder):
+
+    x = [i for i in range(episode_window-1,num_episode)]
+    fig = plt.figure(figsize=(32,16))
+    
+    plt.errorbar(x,mean,yerr=interval_size,ecolor='c',fmt='bx')
+    plt.ylim(min_r,max_r)
     plt.title(title,fontweight='bold')
     plt.xlabel("Episode No.")
     plt.ylabel("Moving Average Score")
@@ -90,10 +104,11 @@ def storeTable(filename,folder,table,table_param,run):
         f.write("\n\n\n")
 
 
-def confInterval(goal_run,conf_lvl):
+def confInterval(goal_run,conf_lvl,max_reward):
 
     goal_len = len(goal_run[0])
     mean_conf_goal = []
+    interval_goal = np.zeros((2,goal_len))
     
     for i in range(goal_len):
         series_reward = []
@@ -103,11 +118,32 @@ def confInterval(goal_run,conf_lvl):
             
         mean = np.mean(series_reward)
         sem = st.sem(series_reward)
-        upper, lower = st.t.interval(conf_lvl,goal_len-1,loc=mean,scale=sem)
+        
+        ######## Standard Error of Mean Method ########
+        lower_size = sem
+        upper_size = sem
 
-        mean_conf_goal.append((mean,upper,lower))
+        ######## 95% Confidence Level Method ##########
+        
+        # if sem == 0:
+        #     sem = 1e-10        
+        # interval_size = sem * st.t.ppf((1+conf_lvl)/2,goal_len-1)
 
-    return mean_conf_goal
+        # lower_size = interval_size
+        # upper_size = interval_size
+
+        ################################################
+        
+        if(mean + upper_size > max_reward):
+            upper_size = max_reward - mean
+            
+        interval_goal[0][i] = lower_size
+        interval_goal[1][i] = upper_size
+
+        mean_conf_goal.append(mean)        
+        
+    # print(mean_conf_goal,interval_goal)
+    return mean_conf_goal, interval_goal
 
         
     
