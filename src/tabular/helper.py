@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 import scipy.stats as st
 import numpy as np
 
-def playGame(t_agent,maze,game_step,mode="play"):
+def playGame(t_agent,maze,game_step,no_play,mode="play"):
     
     goals = []
     
-    for episode in range(t_agent.max_epi):        
+    for episode in range(no_play):        
         state = maze.reset()
         acc_reward = 0
         step_count = 0
@@ -48,7 +48,7 @@ def avgEvalEpisode(mean,interval_size,max_r,min_r,num_episode,episode_window,tit
     x = [i for i in range(episode_window-1,num_episode)]
     fig = plt.figure(figsize=(32,16))
     
-    plt.errorbar(x,mean,yerr=interval_size,ecolor='c',fmt='bx')
+    plt.errorbar(x,mean,yerr=interval_size,ecolor='c',fmt='b-')
     plt.ylim(min_r,max_r)
     plt.title(title,fontweight='bold')
     plt.xlabel("Episode No.")
