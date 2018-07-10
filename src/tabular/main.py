@@ -1,11 +1,11 @@
 from tabular import map_env as me
 from tabular import t_agent as ta
 from tabular import helper as hp
-        
+
 
 def main():
 
-    game = "windy_maze"          # windy_maze   # hard_windy_maze
+    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze
     maze = me.makeMapEnv(game) 
 
     ####### Q Parameters ##########
@@ -14,12 +14,13 @@ def main():
     act_n = maze._agent._action_space_n
     
     discount_factor  = 0.9                          # the discount factor, 0.9 for gauss,epsilon
-    learning_decay = 0.5                            # 0.5 for count based # to decay learning rate
+    learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
     
-    q_update = "epsilon"                    # epsilon # count # risk # q-update method
+    q_update = "risk"                    # epsilon # count # risk # q-update method
     explore_method = "epsilon"           # "epsilon", "risk", True (gauss), False (greedy)
-    epsilon_decay_type = "linear"           # "linear"   "exponential"
-    epsilon_decay_rate = 0.3
+    epsilon_decay_type = "constant"           # "linear"   "exponential"   "constant"
+    epsilon_decay_rate = 0.3               # the polynomial for exponential decay
+    epsilon_constant = 0.5                 # use a constant epsilon policy
     
     max_epsilon = 1.0                      # maximum epsilon value which decays with episodes
     min_epsilon = 0.00001
@@ -30,17 +31,18 @@ def main():
 
     initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
+    initial_U = 1.0
     
     ######### Experiments & Records #########
     """
     pure = pure epsilon greedy exploration linear decay w/o initial optimistic Q
 
     """
-    param_set = "epsilon_risk_0.2"              # to record different sets of params used
-    max_episode = 1000
-    run = 1                                 # number of runs to train the agent
+    param_set = "{}_".format(explore_method)              # to record different sets of params used
+    max_episode = 100000
+    run = 5                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
-    no_play = 30                          # number of episodes for the test run
+    no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
     
     save = False                            # True to save the picture generated from evalEpisode()
@@ -50,7 +52,7 @@ def main():
 
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 100                     # size of the window for moving average, use factor of 10
+    episode_window = 10000                     # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
@@ -85,6 +87,7 @@ def main():
                                      diminishing_weight,max_episode,q_update,epsilon_decay_rate)
         t_agent.Q[t_agent.Q == 0] = initial_Q
         t_agent.M[t_agent.M == 0] = initial_M
+        t_agent.U[t_agent.U == 0] = initial_U
 
         goals = []                          # accumulation of rewards
         done_count  = 0                     # freq of task completion / elimination below max game steps
@@ -96,7 +99,7 @@ def main():
             
             while step_count <= game_step:
 
-                action = t_agent.act(state,episode,epsilon_decay_type)
+                action = t_agent.act(state,episode,epsilon_decay_type,epsilon_constant) # remove constant 
                 new_state, reward, done = maze.step(action)
                 
                 learning_rate = t_agent.learningRate(episode,learning_decay)   # can define power value
@@ -108,8 +111,9 @@ def main():
                                         learning_rate,beta_cnt_based)   # count-based training
                 elif(q_update == "risk"):
                     t_agent.risk_train(new_state,reward,state,action,risk_level,episode,epsilon_decay_type,
-                                       learning_rate)  # risk-seeking training # make sure it's on-policy,
-                                                       # i.e. change the risk_train code
+                                       learning_rate,epsilon_constant)  # risk-seeking training, make sure
+                                                                        # it's on-policy,
+                                                                        # i.e. change the risk_train code
                 state = new_state
                 step_count+=1
             
@@ -119,25 +123,24 @@ def main():
                 
         ############ Using Current Q Table to Play Games without further Update ##################
         
-            if(episode % test_freq == 0):
-                actual_goals = hp.playGame(t_agent,maze,game_step,no_play)
-                actual_avg = sum(actual_goals) /no_play
-                goals.append(actual_avg)
+            # if(episode % test_freq == 0):
+            actual_goals = hp.playGame(t_agent,maze,game_step,no_play)
+            actual_avg = sum(actual_goals) /no_play
+            goals.append(actual_avg)
 
         ########## Result for Each Training Run #############
 
         # print("Final M Table  = \n",t_agent.M)
-        print("Final Q Table  = \n",t_agent.Q)
-        # print("Final U Table  = \n",t_agent.U)
+        # print("Final Q Table  = \n",t_agent.Q)
+        print("Final U Table  = \n",t_agent.U)
         # print("Final Count Table  = \n",t_agent.visit_count)
         print("No. of plays under {0} game steps = ".format(game_step),done_count)
         
         no_testing = max_episode/test_freq
-        assert(no_testing == len(goals))
-        print("Average goal collected for each episode of test play:",goals)
+        # print("Average goal collected for each episode of test play:",goals)
         avg_score = sum(goals)/no_testing
         
-        print("Average score every {} episode:".format(test_freq), avg_score)
+        print("Average score across testing episodes:", avg_score)
         # maze.render()
         print("Current run count = ",run_cnt)
         
