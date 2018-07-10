@@ -19,7 +19,6 @@ class Tabular_Q_Agent:
         self.discount_noise = discount_noise
         self.diminishing_weight = diminishing_weight
         
-
         self.visit_count = np.zeros([obs_n,act_n])
         self.M = np.zeros([obs_n,act_n])
         self.U = np.zeros([obs_n,act_n])
@@ -82,10 +81,10 @@ class Tabular_Q_Agent:
         delta_M = (reward**2) + (2*self.gamma*reward*(optimal_Q)) + ((self.gamma**2)*optimal_M) - self.M[state,action]
         self.M[state,action] += learning_rate*(delta_M)
 
-        # self.U[state,action] = self.Q[state,action] + risk_level*(max(0,self.M[state,action] - (self.Q[state,action]**2)))
+        self.U[state,action] = self.Q[state,action] + risk_level*(max(0,self.M[state,action] - (self.Q[state,action]**2)))
 
-        delta_U = self.Q[state,action] + risk_level*(max(0,self.M[state,action] - (self.Q[state,action]**2)))
-        self.U[state,action] += learning_rate*(delta_U)
+        # delta_U = self.Q[state,action] + risk_level*(max(0,self.M[state,action] - (self.Q[state,action]**2)))
+        # self.U[state,action] += learning_rate*(delta_U)
 
         return delta_Q, delta_M
     
@@ -141,8 +140,8 @@ class Tabular_Q_Agent:
 
     def learningRate(self,episode,power=0.85):
 
-        alpha = 1/((episode+1)**power)
-        # alpha = 0.8
+        # alpha = 1/((episode+1)**power)
+        alpha = 0.8
 
         return alpha
             
