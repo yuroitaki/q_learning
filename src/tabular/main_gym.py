@@ -1,22 +1,43 @@
-from tabular import map_env as me
-from tabular import t_agent as ta
-from tabular import helper as hp
 import numpy as np
+import gym as me
+from gym.envs.registration import register
+
+from tabular import t_agent as ta
+from tabular import helper_gym as hp
+
+# '''
+register(
+    id='FrozenLakeNotSlippery-v0',
+    entry_point='gym.envs.toy_text:FrozenLakeEnv',
+    kwargs={'map_name' : '4x4', 'is_slippery': False},
+    max_episode_steps=100,
+    reward_threshold=0.78, # optimum = .8196
+)
+
+register(
+    id='BigFrozenLakeNotSlippery-v0',
+    entry_point='gym.envs.toy_text:FrozenLakeEnv',
+    kwargs={'map_name' : '8x8', 'is_slippery': False},
+    max_episode_steps=100,
+    reward_threshold=0.78, # optimum = .8196
+)
+
+# '''
 
 def main():
 
-    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze
-    maze = me.makeMapEnv(game) 
+    game = "Taxi-v2"         # FrozenLake-v0  # FrozenLakeNotSlippery-v0  # CliffWalking-v0
+    maze = me.make(game) 
 
     ####### Q Parameters ##########
     
-    obs_n = maze._obs_space_n
-    act_n = maze._agent._action_space_n
+    obs_n = maze.observation_space.n               # openAI gym env   
+    act_n = maze.action_space.n
     
     discount_factor  = 0.9                          # the discount factor, 0.9 for gauss,epsilon
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
-    q_update = "epsilon"                     # epsilon # count # risk
+    q_update = "risk"                     # epsilon # count # risk
     exp_strategy = "epsilon"               # "epsilon", "softmax", "greedy"
     update_policy = "greedy"               # "epsilon", "softmax", "greedy"
     
@@ -41,21 +62,21 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 100000
-    run = 20                                 # number of runs to train the agent
+    max_episode = 5000
+    run = 5                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
     
     save = False                            # True to save the picture generated from evalEpisode()
-    folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
+    folder = "frozen_lake_not_slippery"              # frozen_lake  # frozen_lake_not_slippery  # cliff_walking
     game_type = "dtm"                        # dtm  # stoc
     filename = "{}_{}_exp_{}_runs_{}_epi_type_{}".format(game_type,q_update,run,max_episode,param_set)
 
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 10000                     # size of the window for moving average, use factor of 10
-    max_reward = 1.0
+    episode_window = 100                     # size of the window for moving average, use factor of 10
+    max_reward = 20.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
     conf_lvl = 0.95                         # confidence level for confidence interval result plotting
@@ -72,7 +93,7 @@ def main():
     run_count = 1
     
     for i in range(run_count):
-        rand_rewards = hp.playGame(t_agent,maze,game_cnt,"rand")    # self-created env
+        rand_rewards = hp.playGame(t_agent,maze,game_cnt,"rand")    
         rand_avg_rewards = sum(rand_rewards)/num_epi
         print(rand_avg_rewards)
     '''
@@ -104,7 +125,7 @@ def main():
             while step_count <= game_step:
 
                 action = t_agent.act(state,episode)                       
-                new_state, reward, done = maze.step(action)
+                new_state, reward, done, info = maze.step(action)
                 
                 learning_rate = t_agent.learningRate(episode,learning_decay)   # can define power value
                                                                                # for diff decay rate
@@ -132,9 +153,9 @@ def main():
 
         ########## Result for Each Training Run #############
 
-        # print("Final Q Table  = \n",t_agent.Q)
+        print("Final Q Table  = \n",t_agent.Q)
         # print("Final M Table  = \n",t_agent.M)
-        print("Final U Table  = \n",t_agent.U)
+        # print("Final U Table  = \n",t_agent.U)
         print("Final Count Table  = ")
         print(np.array_str(t_agent.visit_count,suppress_small=True))
         print("No. of plays under {0} game steps = ".format(game_step),done_count)

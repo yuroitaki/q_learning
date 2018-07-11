@@ -16,8 +16,8 @@ def playGame(t_agent,maze,game_step,no_play,mode="play"):
             if mode == "play":
                 action = t_agent.play(state,episode)
             elif mode == "rand":
-                action = maze.randomSampling()
-            new_state, reward, done = maze.step(action)
+                action = maze.action_space.sample()
+            new_state, reward, done,info = maze.step(action)
             acc_reward += reward
             state = new_state
             step_count+=1
@@ -49,7 +49,7 @@ def avgEvalEpisode(mean,interval_size,max_r,min_r,num_episode,episode_window,tit
     fig = plt.figure(figsize=(32,16))
     
     plt.errorbar(x,mean,yerr=interval_size,ecolor='c',fmt='b-')
-    plt.ylim(min_r,max_r)
+    # plt.ylim(min_r,max_r)
     plt.title(title,fontweight='bold')
     plt.xlabel("Episode No.")
     plt.ylabel("Moving Average Score")
