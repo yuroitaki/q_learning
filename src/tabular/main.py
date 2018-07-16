@@ -6,9 +6,13 @@ import numpy as np
 def main():
 
     game = "hard_windy_maze"          # windy_maze   # hard_windy_maze
-    maze = me.makeMapEnv(game) 
+    start_row = 5
+    start_col = 3
+    maze = me.makeMapEnv(game,start_row,start_col)
+    maze.reset()
+    maze.render()
 
-    ####### Q Parameters ##########
+    ########## Q Learning Params ########
     
     obs_n = maze._obs_space_n
     act_n = maze._agent._action_space_n
@@ -16,7 +20,7 @@ def main():
     discount_factor  = 0.9                          # the discount factor, 0.9 for gauss,epsilon
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
-    q_update = "epsilon"                     # epsilon # count # risk
+    q_update = "count"                     # epsilon # count # risk
     exp_strategy = "epsilon"               # "epsilon", "softmax", "greedy"
     update_policy = "greedy"               # "epsilon", "softmax", "greedy"
     
@@ -29,11 +33,11 @@ def main():
     diminishing = True            # False to not use the discounted weight for noise in late episodes
 
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
-    risk_level = 0.3                       # risk seeking level for risk training
+    risk_level = 0.5                       # risk seeking level for risk training
 
     initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
-    initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
-    initial_U = 1.0
+    initial_M = 0.0                       # an example uses 1/(1-discount_factor) for initial_Q
+    initial_U = 0.0
     
     ######### Experiments & Records #########
     """
@@ -41,8 +45,8 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 100000
-    run = 20                                 # number of runs to train the agent
+    max_episode = 3000
+    run = 10                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
@@ -54,7 +58,7 @@ def main():
 
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 10000                     # size of the window for moving average, use factor of 10
+    episode_window = 100                     # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
@@ -89,10 +93,10 @@ def main():
                                      diminishing,max_episode,q_update,epsilon_type,epsilon_rate,
                                      epsilon_const,update_policy)
 
-        t_agent.Q[t_agent.Q == 0] = initial_Q
-        t_agent.M[t_agent.M == 0] = initial_M
-        t_agent.U[t_agent.U == 0] = initial_U
-
+        maze.initialiseTable(t_agent.Q,initial_Q)
+        maze.initialiseTable(t_agent.M,initial_M)
+        maze.initialiseTable(t_agent.U,initial_U)
+        
         goals = []                          # accumulation of rewards
         done_count  = 0                     # freq of task completion / elimination below max game steps
 
@@ -103,7 +107,7 @@ def main():
             
             while step_count <= game_step:
 
-                action = t_agent.act(state,episode)                       
+                action = t_agent.act(state,episode)
                 new_state, reward, done = maze.step(action)
                 
                 learning_rate = t_agent.learningRate(episode,learning_decay)   # can define power value
@@ -115,7 +119,11 @@ def main():
                                         learning_rate,beta_cnt_based)   # count-based training
                 elif(q_update == "risk"):                               # risk training
                     t_agent.risk_train(new_state,reward,state,action,risk_level,episode,learning_rate)
-                                                                         
+
+                # print("Action = ",action)
+                # maze.render()
+                # print("U Table = \n",t_agent.U)
+
                 state = new_state
                 step_count+=1
             
@@ -131,13 +139,17 @@ def main():
             goals.append(actual_avg)
 
         ########## Result for Each Training Run #############
+        
+        # print("Final Q Table  = \n")
+        # print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
+        # print("Final M Table  = \n")
+        # print(np.array_str(t_agent.M,precision=2,suppress_small=True))
+        # print("Final U Table  = \n")
+        # print(np.array_str(t_agent.U,precision=2,suppress_small=True))
 
-        # print("Final Q Table  = \n",t_agent.Q)
-        # print("Final M Table  = \n",t_agent.M)
-        print("Final U Table  = \n",t_agent.U)
-        print("Final Count Table  = ")
-        print(np.array_str(t_agent.visit_count,suppress_small=True))
-        print("No. of plays under {0} game steps = ".format(game_step),done_count)
+        # print("Final Count Table  = ")
+        # print(np.array_str(t_agent.visit_count,suppress_small=True))
+        # # print("No. of plays under {0} game steps = ".format(game_step),done_count)
         
         no_testing = max_episode/test_freq
         # print("Average goal collected for each episode of test play:",goals)

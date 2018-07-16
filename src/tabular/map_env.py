@@ -8,7 +8,7 @@ MAPS = {
     "windy_maze":[
         ["O","X","O","F"],
         ["O","O","O","O"],
-        ["S","X","O","X"],
+        ["O","X","O","X"],
         ["O","O","O","O"],
     ],
     "hard_windy_maze":[
@@ -19,7 +19,7 @@ MAPS = {
         ["O","X","X","X","X","O","O","X"],
         ["O","O","O","O","X","O","X","O"],
         ["O","O","X","O","O","O","O","O"],
-        ["S","O","O","O","O","X","O","X"],
+        ["O","O","O","O","O","X","O","X"],
     ]
 }
 
@@ -120,8 +120,21 @@ class MapEnv:
             sys.stdout.write("\n")
         sys.stdout.write("\n")
 
+
+    def initialiseTable(self,table,val):
+
+        for row in range(self._map_length):
+            for col in range(self._map_width):
+                state  = self.toState(row,col)
+                mark = self._maps[row][col]
+
+                if mark == "O":
+                    for action in range(self._agent._action_space_n):
+                        table[state][action] = val
+                        
+
         
-def makeMapEnv(map_name,maps=None,start_r=2,start_c=0):
+def makeMapEnv(map_name,start_r=2,start_c=0,maps=None):
         
     maze = MapEnv(map_name,maps,start_r,start_c)
     return maze

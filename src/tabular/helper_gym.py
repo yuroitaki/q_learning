@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as st
 import numpy as np
 
-def playGame(t_agent,maze,game_step,no_play,mode="play"):
+def playGame(t_agent,maze,game_step,no_play,epi,max_epi,mode="play"):
     
     goals = []
     

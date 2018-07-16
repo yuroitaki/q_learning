@@ -5,6 +5,8 @@ from gym.envs.registration import register
 from tabular import t_agent as ta
 from tabular import helper_gym as hp
 
+# np.set_printoptions(threshold=np.nan)
+
 # '''
 register(
     id='FrozenLakeNotSlippery-v0',
@@ -62,9 +64,9 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 5000
-    run = 5                                 # number of runs to train the agent
-    game_step = 100                         # number of game time steps before termination
+    max_episode = 500
+    run = 20                                 # number of runs to train the agent
+    game_step = 200                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
     
@@ -76,7 +78,7 @@ def main():
     ####### Moving Average Graph Plotting #######
 
     episode_window = 100                     # size of the window for moving average, use factor of 10
-    max_reward = 20.0
+    max_reward = 20.0                     # max reward for the game
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
     conf_lvl = 0.95                         # confidence level for confidence interval result plotting
@@ -121,12 +123,13 @@ def main():
             
             state = maze.reset()
             step_count = 0
-            
+            acc_reward = 0
+
             while step_count <= game_step:
 
-                action = t_agent.act(state,episode)                       
+                action = t_agent.act(state,episode)
+
                 new_state, reward, done, info = maze.step(action)
-                
                 learning_rate = t_agent.learningRate(episode,learning_decay)   # can define power value
                                                                                # for diff decay rate
                 if(q_update == "epsilon"):
@@ -138,8 +141,9 @@ def main():
                     t_agent.risk_train(new_state,reward,state,action,risk_level,episode,learning_rate)
                                                                          
                 state = new_state
-                step_count+=1
-            
+                step_count += 1
+                acc_reward += reward
+                
                 if done == True:
                     done_count += 1
                     break
@@ -147,17 +151,17 @@ def main():
         ############ Using Current Q Table to Play Games without further Update ##################
         
             # if(episode % test_freq == 0):
-            actual_goals = hp.playGame(t_agent,maze,game_step,no_play)
+            actual_goals = hp.playGame(t_agent,maze,game_step,no_play,episode,max_episode)
             actual_avg = sum(actual_goals) /no_play
             goals.append(actual_avg)
 
         ########## Result for Each Training Run #############
 
-        print("Final Q Table  = \n",t_agent.Q)
+        # print("Final Q Table  = \n",t_agent.Q)
         # print("Final M Table  = \n",t_agent.M)
-        # print("Final U Table  = \n",t_agent.U)
-        print("Final Count Table  = ")
-        print(np.array_str(t_agent.visit_count,suppress_small=True))
+        print("Final U Table  = \n",t_agent.U)
+        # print("Final Count Table  = ")
+        # print(np.array_str(t_agent.visit_count,suppress_small=True))
         print("No. of plays under {0} game steps = ".format(game_step),done_count)
         
         no_testing = max_episode/test_freq
@@ -167,7 +171,7 @@ def main():
         print("Average score across testing episodes:", avg_score)
         maze.render()
         print("Current run count = ",run_cnt)
-        
+
         # '''
 
         ############## Store the Result ###############
@@ -211,8 +215,6 @@ def main():
     
     hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
                    max_episode,episode_window,filename,save,folder)
-
-                                        
                                         
 if __name__ == "__main__":
     main()

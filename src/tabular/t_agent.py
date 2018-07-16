@@ -21,12 +21,23 @@ class Tabular_Q_Agent:
         self.epsilon_const = epsilon_const
         self.diminishing = diminishing
 
-        self.Q = np.zeros([obs_n,act_n])
-        self.visit_count = np.zeros([obs_n,act_n])
-        self.M = np.zeros([obs_n,act_n])
-        self.U = np.zeros([obs_n,act_n])
+        self.Q = np.zeros([obs_n,act_n+1])
+        self.visit_count = np.zeros([obs_n,act_n+1])
+        self.M = np.zeros([obs_n,act_n+1])
+        self.U = np.zeros([obs_n,act_n+1])
+
+        self.initialiseTable()
+
         
-        
+    def initialiseTable(self):
+
+        for row in range(self.obs_n):
+            self.Q[row][self.act_n] = row
+            self.M[row][self.act_n] = row
+            self.U[row][self.act_n] = row
+            self.visit_count[row][self.act_n] = row
+
+            
     def act(self,state,episode):
         
         if self.q_update == "risk":
@@ -35,9 +46,9 @@ class Tabular_Q_Agent:
             table = self.Q
         
         if self.exp_strategy == "softmax" and self.diminishing == True:
-            action = np.argmax(table[state,:]+np.random.randn(1,self.act_n)*(1/(episode+1)))
+            action = np.argmax(table[state,:-1]+np.random.randn(1,self.act_n)*(1/(episode+1)))
         elif self.exp_strategy == "softmax" and self.diminishing == False:
-            action = np.argmax(table[state,:]+np.random.randn(1,self.act_n))
+            action = np.argmax(table[state,:-1]+np.random.randn(1,self.act_n))
             
         elif self.exp_strategy == "epsilon":
             action = self.epsilonGreedy(state,episode)
@@ -53,7 +64,7 @@ class Tabular_Q_Agent:
     
     def train(self,new_state,reward,state,action,learning_rate,exploration_bonus=0):
         
-        optimal_Q = np.max(self.Q[new_state,:])
+        optimal_Q = np.max(self.Q[new_state,:-1])
         td_delta = reward + exploration_bonus + self.discount_factor*(optimal_Q) - self.Q[state,action]
         self.Q[state,action] += learning_rate*(td_delta)
         
@@ -141,11 +152,11 @@ class Tabular_Q_Agent:
 
     def optimalAction(self,table,state):
 
-        max_Q = max(table[state,:])
+        max_Q = max(table[state,:-1])
         index = 0
         index_list = []
         
-        for a in table[state,:]:
+        for a in table[state,:-1]:
             if max_Q == a:
                 index_list.append(index)
             index += 1
