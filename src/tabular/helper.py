@@ -42,7 +42,7 @@ def evalEpisode(goals,num_episode,episode_window,title):
     plt.close()
 
 
-
+    
 def avgEvalEpisode(mean,interval_size,max_r,min_r,num_episode,episode_window,title,save,folder):
 
     x = [i for i in range(episode_window-1,num_episode)]

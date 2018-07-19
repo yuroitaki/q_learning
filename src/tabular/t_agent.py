@@ -25,7 +25,8 @@ class Tabular_Q_Agent:
         self.visit_count = np.zeros([obs_n,act_n+1])
         self.M = np.zeros([obs_n,act_n+1])
         self.U = np.zeros([obs_n,act_n+1])
-
+        self.var = np.zeros([obs_n,act_n+1]) 
+        
         self.initialiseTable()
 
         
@@ -36,6 +37,7 @@ class Tabular_Q_Agent:
             self.M[row][self.act_n] = row
             self.U[row][self.act_n] = row
             self.visit_count[row][self.act_n] = row
+            self.var[row][self.act_n] = row
 
             
     def act(self,state,episode):
@@ -100,10 +102,12 @@ class Tabular_Q_Agent:
         delta_M = (reward**2) + (2*self.discount_factor*reward*(optimal_Q)) + ((self.discount_factor**2)*optimal_M) - self.M[state,action]
         self.M[state,action] += learning_rate*(delta_M)
 
-        self.U[state,action] = self.Q[state,action] + risk_level*(max(0,self.M[state,action] - (self.Q[state,action]**2)))
-
-        return delta_Q, delta_M
-    
+        variance = self.M[state,action] - (self.Q[state,action]**2)
+        # if(variance < 0):
+        #     print(variance)
+        self.var[state,action] = variance
+        self.U[state,action] = self.Q[state,action] + risk_level*(max(0,variance))
+            
 
     ########### Epsilon Greedy ################
     

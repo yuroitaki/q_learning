@@ -131,7 +131,10 @@ class MapEnv:
                 if mark == "O":
                     for action in range(self._agent._action_space_n):
                         table[state][action] = val
-                        
+                                       
+            
+                   
+
 
         
 def makeMapEnv(map_name,start_r=2,start_c=0,maps=None):
