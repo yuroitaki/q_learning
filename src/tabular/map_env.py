@@ -55,7 +55,7 @@ class MapEnv:
     
                    if end_game:
                        default_reward = self.reward(None)
-                       trans.extend((state,default_reward,end_game))
+                        trans.extend((state,default_reward,end_game))
 
                    else:
                        new_rol,new_col = self._agent.move(action,row,col)

@@ -30,7 +30,7 @@ def main():
     epsilon_rate = 0.3               # the polynomial for exponential decay
     max_epsilon = 1.0                      # maximum epsilon value which decays with episodes
     min_epsilon = 0.00001
-    diminishing = True            # False to not use the discounted weight for noise in late episodes
+    diminishing = True               # False to not use the discounted weight for noise in late episodes
 
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
     risk_level = 0.5                       # risk seeking level for risk training

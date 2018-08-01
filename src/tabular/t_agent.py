@@ -139,7 +139,7 @@ class Tabular_Q_Agent:
 
 
     def play(self,state,episode):
-
+ 
         if self.q_update == "risk":
             table = self.U
         else:

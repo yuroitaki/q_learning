@@ -29,6 +29,52 @@ def playGame(t_agent,maze,game_step,no_play,mode="play"):
     return goals
 
 
+def monteCarlo(t_agent,maze,game_step,no_play,discount):
+
+    goals = np.zeros([t_agent.obs_n,t_agent.act_n+1])
+    var_goals = np.zeros([t_agent.obs_n,t_agent.act_n+1])
+    
+    for row in range(t_agent.obs_n):
+        goals[row][t_agent.act_n] = row
+        var_goals[row][t_agent.act_n] = row
+        
+    for row in range(maze._map_length):
+        for col in range(maze._map_width):
+            mark = maze._maps[row][col]
+            if mark in "XF":
+                break
+            else:
+                for chosen_action in range(t_agent.act_n):
+                    sample_goals = []
+                    
+                    for episode in range(no_play):
+                        state = maze.toState(row,col)
+                        step_count = 0
+                        true_goal = 0
+                    
+                        while step_count <= game_step:
+
+                            if step_count == 0:
+                                action = chosen_action
+                            else:
+                                action = t_agent.play(state,episode)
+                                
+                            new_state, reward, done = maze.step(action)
+
+                            true_goal += reward*(discount**step_count)
+                            state = new_state
+                            step_count += 1
+
+                            if done == True:
+                                break
+                    
+                        sample_goals.append(true_goal)
+                    
+                
+                
+
+
+
 def evalEpisode(goals,num_episode,episode_window,title):
 
     x = [i for i in range(episode_window-1,num_episode)]
