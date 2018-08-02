@@ -55,8 +55,8 @@ class MapEnv:
     
                    if end_game:
                        default_reward = self.reward(None)
-                        trans.extend((state,default_reward,end_game))
-
+                       trans.extend((state,default_reward,end_game))
+                        
                    else:
                        new_rol,new_col = self._agent.move(action,row,col)
                        new_state = self._agent._current_state
@@ -107,6 +107,12 @@ class MapEnv:
         return self._agent._current_state
 
     
+    def setStart(self,row,col):
+        
+        self._agent.updateState(row,col)
+        return self._agent._current_state
+
+    
     def render(self):
         
         for row in range(self._map_length):
@@ -133,9 +139,7 @@ class MapEnv:
                         table[state][action] = val
                                        
             
-                   
-
-
+                
         
 def makeMapEnv(map_name,start_r=2,start_c=0,maps=None):
         

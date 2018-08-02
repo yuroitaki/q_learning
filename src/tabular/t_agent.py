@@ -26,7 +26,10 @@ class Tabular_Q_Agent:
         self.M = np.zeros([obs_n,act_n+1])
         self.U = np.zeros([obs_n,act_n+1])
         self.var = np.zeros([obs_n,act_n+1]) 
-        
+
+        self.monte_goal = np.zeros([obs_n,act_n+1])
+        self.monte_var = np.zeros([obs_n,act_n+1])
+                
         self.initialiseTable()
 
         
@@ -38,6 +41,8 @@ class Tabular_Q_Agent:
             self.U[row][self.act_n] = row
             self.visit_count[row][self.act_n] = row
             self.var[row][self.act_n] = row
+            self.monte_goal[row][self.act_n] = row
+            self.monte_var[row][self.act_n] = row
 
             
     def act(self,state,episode):

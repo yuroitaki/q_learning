@@ -30,25 +30,17 @@ def playGame(t_agent,maze,game_step,no_play,mode="play"):
 
 
 def monteCarlo(t_agent,maze,game_step,no_play,discount):
-
-    goals = np.zeros([t_agent.obs_n,t_agent.act_n+1])
-    var_goals = np.zeros([t_agent.obs_n,t_agent.act_n+1])
-    
-    for row in range(t_agent.obs_n):
-        goals[row][t_agent.act_n] = row
-        var_goals[row][t_agent.act_n] = row
         
     for row in range(maze._map_length):
         for col in range(maze._map_width):
             mark = maze._maps[row][col]
-            if mark in "XF":
-                break
-            else:
+            if mark == "O":
                 for chosen_action in range(t_agent.act_n):
                     sample_goals = []
+                    start_state = maze.toState(row,col)
                     
                     for episode in range(no_play):
-                        state = maze.toState(row,col)
+                        state = maze.setStart(row,col)
                         step_count = 0
                         true_goal = 0
                     
@@ -58,7 +50,7 @@ def monteCarlo(t_agent,maze,game_step,no_play,discount):
                                 action = chosen_action
                             else:
                                 action = t_agent.play(state,episode)
-                                
+
                             new_state, reward, done = maze.step(action)
 
                             true_goal += reward*(discount**step_count)
@@ -69,9 +61,9 @@ def monteCarlo(t_agent,maze,game_step,no_play,discount):
                                 break
                     
                         sample_goals.append(true_goal)
-                    
-                
-                
+                    print("state {}, action {}, goals {}".format(start_state,chosen_action,sample_goals))
+                    t_agent.monte_goal[start_state][chosen_action] = np.mean(sample_goals)
+                    t_agent.monte_var[start_state][chosen_action] = np.var(sample_goals)
 
 
 

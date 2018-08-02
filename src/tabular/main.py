@@ -35,7 +35,7 @@ def main():
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
     risk_level = 0.5                       # risk seeking level for risk training
 
-    initial_Q = 1.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
+    initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
     initial_U = 1.0
     
@@ -45,11 +45,12 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 5000
+    max_episode = 2500
     run = 1                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
+    monte_freq = 10                       # frequency of monte carlo sampling for each state-action
     
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
@@ -58,14 +59,14 @@ def main():
 
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 1000                     # size of the window for moving average, use factor of 10
+    episode_window = 100                     # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
     conf_lvl = 0.95                         # confidence level for confidence interval result plotting
     
     ########################################
-
+    
     ######### Random Action Sampling ##########
     '''
     t_agent = ta.Tabular_Q_Agent(discount_factor,obs_n,act_n,max_epsilon,min_epsilon,exp_strategy,
@@ -92,11 +93,11 @@ def main():
         t_agent = ta.Tabular_Q_Agent(discount_factor,obs_n,act_n,max_epsilon,min_epsilon,exp_strategy,
                                      diminishing,max_episode,q_update,epsilon_type,epsilon_rate,
                                      epsilon_const,update_policy)
-
+        
         maze.initialiseTable(t_agent.Q,initial_Q)
         maze.initialiseTable(t_agent.M,initial_M)
         maze.initialiseTable(t_agent.U,initial_U)
-        
+            
         goals = []                          # accumulation of rewards
         done_count  = 0                     # freq of task completion / elimination below max game steps
 
@@ -146,21 +147,25 @@ def main():
                 # print(np.array_str(t_agent.var,precision=10,suppress_small=True))
 
         ########## Result for Each Training Run #############
+  
+        hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
 
+        print("Final Monte Q = \n")
+        print(np.array_str(t_agent.monte_goal,precision=2,suppress_small=True))
         print("Final Q Table  = \n")
         print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
+        
+        print("Final Monte Var = \n")
+        print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
         print("Final Var \n")
         print(np.array_str(t_agent.var,precision=2,suppress_small=True))
 
+        # print("Final U Table  = \n")
+        # print(np.array_str(t_agent.U,precision=2,suppress_small=True))
 
-        print("Final U Table  = \n")
-        print(np.array_str(t_agent.U,precision=2,suppress_small=True))
+        # print("Final M Table  = \n")
+        # print(np.array_str(t_agent.M,precision=2,suppress_small=True))
 
-        print("Final M Table  = \n")
-        print(np.array_str(t_agent.M,precision=2,suppress_small=True))
-
-        
-        
         # print("Final Count Table  = ")
         # print(np.array_str(t_agent.visit_count,suppress_small=True))
         # print("No. of plays under {0} game steps = ".format(game_step),done_count)
