@@ -61,7 +61,7 @@ def monteCarlo(t_agent,maze,game_step,no_play,discount):
                                 break
                     
                         sample_goals.append(true_goal)
-                    print("state {}, action {}, goals {}".format(start_state,chosen_action,sample_goals))
+                    # print("state {}, action {}, goals {}".format(start_state,chosen_action,sample_goals))
                     t_agent.monte_goal[start_state][chosen_action] = np.mean(sample_goals)
                     t_agent.monte_var[start_state][chosen_action] = np.var(sample_goals)
 
