@@ -45,6 +45,12 @@ class Tabular_Q_Agent:
             self.monte_var[row][self.act_n] = row
 
             
+    def initialiseU(self,risk_level):
+        
+        init_var = self.M[:,:-1] - (self.Q[:,:-1]**2)
+        self.U[:,:-1] = self.Q[:,:-1] + risk_level*(init_var)
+        
+        
     def act(self,state,episode):
         
         if self.q_update == "risk":
@@ -97,7 +103,7 @@ class Tabular_Q_Agent:
             new_action = self.optimalAction(self.U,new_state)
             
         elif self.update_policy == "epsilon":
-             new_action = self.epsilonGreedy(new_state,epi)
+            new_action = self.epsilonGreedy(new_state,epi)
         
         optimal_Q = self.Q[new_state,new_action]
         delta_Q = reward + self.discount_factor*(optimal_Q) - self.Q[state,action]
@@ -108,8 +114,6 @@ class Tabular_Q_Agent:
         self.M[state,action] += learning_rate*(delta_M)
 
         variance = self.M[state,action] - (self.Q[state,action]**2)
-        # if(variance < 0):
-        #     print(variance)
         self.var[state,action] = variance
         self.U[state,action] = self.Q[state,action] + risk_level*(max(0,variance))
             

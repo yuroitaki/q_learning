@@ -5,8 +5,8 @@ import numpy as np
 
 def main():
 
-    game = "windy_maze"          # windy_maze   # hard_windy_maze
-    start_row = 2
+    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze
+    start_row = 7
     start_col = 0
     maze = me.makeMapEnv(game,start_row,start_col)
     maze.reset()
@@ -20,8 +20,8 @@ def main():
     discount_factor  = 0.9                          # the discount factor, 0.9 for gauss,epsilon
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
-    q_update = "risk"                     # epsilon # count # risk
-    exp_strategy = "epsilon"               # "epsilon", "softmax", "greedy"
+    q_update = "epsilon"                     # epsilon # count # risk
+    exp_strategy = "greedy"               # "epsilon", "softmax", "greedy"
     update_policy = "greedy"               # "epsilon", "softmax", "greedy"
     
     epsilon_type = "constant"           # "linear"   "exponential"   "constant"
@@ -35,9 +35,8 @@ def main():
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
     risk_level = 1.0                       # risk seeking level for risk training
 
-    initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
+    initial_Q = 1.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
-    initial_U = 1.0
     
     ######### Experiments & Records #########
     """
@@ -45,13 +44,13 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 200
-    run = 1                                 # number of runs to train the agent
+    max_episode = 500
+    run = 5                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
     monte_freq = 10                       # frequency of monte carlo sampling for each state-action
-    monte_test_freq = 50                  # frequency of checking variance table 
+    monte_test_freq = 25                  # frequency of checking variance table 
     
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
@@ -97,7 +96,7 @@ def main():
         
         maze.initialiseTable(t_agent.Q,initial_Q)
         maze.initialiseTable(t_agent.M,initial_M)
-        maze.initialiseTable(t_agent.U,initial_U)
+        t_agent.initialiseU(risk_level)
             
         goals = []                          # accumulation of rewards
         done_count  = 0                     # freq of task completion / elimination below max game steps
@@ -124,6 +123,8 @@ def main():
 
                 # print("Action = ",action)
                 # maze.render()
+                # print("Q Table = \n",t_agent.Q)
+                # print("M Table = \n",t_agent.M)
                 # print("U Table = \n",t_agent.U)
 
                 state = new_state
@@ -140,6 +141,9 @@ def main():
             actual_avg = sum(actual_goals) /no_play
             goals.append(actual_avg)
 
+            # if episode == 0:
+            #     print(np.array_str(t_agent.var,precision=2,suppress_small=True))
+
             # last_epi = max_episode - episode
             # if(last_epi <= 10):
                 # print("Last {} Q Table  = \n".format(last_epi))
@@ -148,21 +152,21 @@ def main():
                 # print(np.array_str(t_agent.var,precision=10,suppress_small=True))
 
                 
-            if episode % monte_test_freq == 0:
-                hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
+            # if episode % monte_test_freq == 0:
+            #     hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
                 
                 # print("Final Monte Q = \n")
                 # print(np.array_str(t_agent.monte_goal,precision=2,suppress_small=True))
-                print("Final Q Table  = \n")
-                print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
+                # print("Final Q Table  = \n")
+                # print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
         
                 # print("Final Monte Var = \n")
                 # print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
-                print("Final Var \n")
-                print(np.array_str(t_agent.var,precision=2,suppress_small=True))
+                # print("Final Var \n")
+                # print(np.array_str(t_agent.var,precision=2,suppress_small=True))
 
-                print("Final U Table  = \n")
-                print(np.array_str(t_agent.U,precision=2,suppress_small=True))
+                # print("Final U Table  = \n")
+                # print(np.array_str(t_agent.U,precision=2,suppress_small=True))
 
                 
         ########## Result for Each Training Run #############
@@ -228,18 +232,18 @@ def main():
         
         ############### Calc the Moving Average of Rewards ####################
 
-        # mov_avg = hp.calcMovingAverage(goals,episode_window)
-        # mov_avg_run.append(mov_avg)
+        mov_avg = hp.calcMovingAverage(goals,episode_window)
+        mov_avg_run.append(mov_avg)
         
         # hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     # to print the current run mov avg
         
 
     ######################### End of Multiple Runs ########################################
     
-    # mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
+    mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
     
-    # hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
-    #                max_episode,episode_window,filename,save,folder)
+    hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
+                   max_episode,episode_window,filename,save,folder)
  
                                         
                                         
