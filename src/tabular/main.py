@@ -1,14 +1,16 @@
 from tabular import map_env as me
+from tabular import map_stoc_env as ms
 from tabular import t_agent as ta
 from tabular import helper as hp
 import numpy as np
 
 def main():
 
-    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze
-    start_row = 7
+    game = "windy_maze"          # windy_maze   # hard_windy_maze
+    start_row = 2
     start_col = 0
-    maze = me.makeMapEnv(game,start_row,start_col)
+    # maze = me.makeMapEnv(game,start_row,start_col)
+    maze  = ms.MapStocEnv(game,start_row,start_col)
     maze.reset()
     maze.render()
 
@@ -20,7 +22,7 @@ def main():
     discount_factor  = 0.9                          # the discount factor, 0.9 for gauss,epsilon
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
-    q_update = "epsilon"                     # epsilon # count # risk
+    q_update = "risk"                     # epsilon # count # risk
     exp_strategy = "greedy"               # "epsilon", "softmax", "greedy"
     update_policy = "greedy"               # "epsilon", "softmax", "greedy"
     
@@ -33,9 +35,9 @@ def main():
     diminishing = True               # False to not use the discounted weight for noise in late episodes
 
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
-    risk_level = 1.0                       # risk seeking level for risk training
+    risk_level = 200.0                       # risk seeking level for risk training
 
-    initial_Q = 1.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
+    initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
     
     ######### Experiments & Records #########
@@ -44,7 +46,7 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 500
+    max_episode = 5000
     run = 5                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
@@ -180,11 +182,11 @@ def main():
         
         # print("Final Monte Var = \n")
         # print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
-        # print("Final Var \n")
-        # print(np.array_str(t_agent.var,precision=2,suppress_small=True))
+        print("Final Var \n")
+        print(np.array_str(t_agent.var,precision=2,suppress_small=True))
  
-        # print("Final U Table  = \n")
-        # print(np.array_str(t_agent.U,precision=2,suppress_small=True))
+        print("Final U Table  = \n")
+        print(np.array_str(t_agent.U,precision=2,suppress_small=True))
 
         # print("Final M Table  = \n")
         # print(np.array_str(t_agent.M,precision=2,suppress_small=True))
@@ -200,7 +202,7 @@ def main():
         print("Average score across testing episodes:", avg_score)
         maze.render()
         print("Current run count = ",run_cnt)
-        
+
         # '''
 
         ############## Store the Result ###############

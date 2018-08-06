@@ -70,7 +70,6 @@ class MapEnv:
 
         state  = self._agent._current_state
         self._agent.move(action)
-        
         return self._trans[state][action]
 
     
