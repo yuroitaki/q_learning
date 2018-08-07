@@ -35,7 +35,7 @@ def main():
     diminishing = True               # False to not use the discounted weight for noise in late episodes
 
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
-    risk_level = 200.0                       # risk seeking level for risk training
+    risk_level = 1.0                       # risk seeking level for risk training
 
     initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
@@ -47,12 +47,12 @@ def main():
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
     max_episode = 5000
-    run = 5                                 # number of runs to train the agent
+    run = 1                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
-    monte_freq = 10                       # frequency of monte carlo sampling for each state-action
-    monte_test_freq = 25                  # frequency of checking variance table 
+    monte_freq = 1000                       # frequency of monte carlo sampling for each state-action
+    monte_test_freq = 1000                  # frequency of checking variance table 
     
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
@@ -154,21 +154,21 @@ def main():
                 # print(np.array_str(t_agent.var,precision=10,suppress_small=True))
 
                 
-            # if episode % monte_test_freq == 0:
-            #     hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
+            if episode % monte_test_freq == 0:
+                hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
                 
                 # print("Final Monte Q = \n")
                 # print(np.array_str(t_agent.monte_goal,precision=2,suppress_small=True))
                 # print("Final Q Table  = \n")
                 # print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
         
-                # print("Final Monte Var = \n")
-                # print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
-                # print("Final Var \n")
-                # print(np.array_str(t_agent.var,precision=2,suppress_small=True))
+                print("Final Monte Var = \n")
+                print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
+                print("Final Var \n")
+                print(np.array_str(t_agent.var,precision=2,suppress_small=True))
 
-                # print("Final U Table  = \n")
-                # print(np.array_str(t_agent.U,precision=2,suppress_small=True))
+                print("Final U Table  = \n")
+                print(np.array_str(t_agent.U,precision=2,suppress_small=True))
 
                 
         ########## Result for Each Training Run #############
@@ -182,11 +182,11 @@ def main():
         
         # print("Final Monte Var = \n")
         # print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
-        print("Final Var \n")
-        print(np.array_str(t_agent.var,precision=2,suppress_small=True))
+        # print("Final Var \n")
+        # print(np.array_str(t_agent.var,precision=2,suppress_small=True))
  
-        print("Final U Table  = \n")
-        print(np.array_str(t_agent.U,precision=2,suppress_small=True))
+        # print("Final U Table  = \n")
+        # print(np.array_str(t_agent.U,precision=2,suppress_small=True))
 
         # print("Final M Table  = \n")
         # print(np.array_str(t_agent.M,precision=2,suppress_small=True))
@@ -234,18 +234,18 @@ def main():
         
         ############### Calc the Moving Average of Rewards ####################
 
-        mov_avg = hp.calcMovingAverage(goals,episode_window)
-        mov_avg_run.append(mov_avg)
+        # mov_avg = hp.calcMovingAverage(goals,episode_window)
+        # mov_avg_run.append(mov_avg)
         
         # hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     # to print the current run mov avg
         
 
     ######################### End of Multiple Runs ########################################
     
-    mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
+    # mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
     
-    hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
-                   max_episode,episode_window,filename,save,folder)
+    # hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
+    #                max_episode,episode_window,filename,save,folder)
  
                                         
                                         
