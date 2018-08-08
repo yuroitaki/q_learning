@@ -6,8 +6,8 @@ import numpy as np
 
 def main():
 
-    game = "windy_maze"          # windy_maze   # hard_windy_maze
-    start_row = 2
+    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze
+    start_row = 7
     start_col = 0
     # maze = me.makeMapEnv(game,start_row,start_col)
     maze  = ms.MapStocEnv(game,start_row,start_col)
@@ -51,8 +51,8 @@ def main():
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
-    monte_freq = 1000                       # frequency of monte carlo sampling for each state-action
-    monte_test_freq = 1000                  # frequency of checking variance table 
+    monte_freq = 100                       # frequency of monte carlo sampling for each state-action
+    monte_test_freq = 100                  # frequency of checking variance table 
     
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
@@ -61,7 +61,7 @@ def main():
 
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 100                     # size of the window for moving average, use factor of 10
+    episode_window = 1000                     # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
@@ -101,6 +101,8 @@ def main():
         t_agent.initialiseU(risk_level)
             
         goals = []                          # accumulation of rewards
+        q_delta_list = []                        # accumulation of delta diff between monte Q and estimate Q
+        var_delta_list = []                      # accumulation of delta diff between monte var and estimate var
         done_count  = 0                     # freq of task completion / elimination below max game steps
 
         for episode in range(max_episode):
@@ -155,23 +157,43 @@ def main():
 
                 
             if episode % monte_test_freq == 0:
+                
                 hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
                 
                 # print("Final Monte Q = \n")
                 # print(np.array_str(t_agent.monte_goal,precision=2,suppress_small=True))
                 # print("Final Q Table  = \n")
                 # print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
-        
-                print("Final Monte Var = \n")
-                print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
-                print("Final Var \n")
-                print(np.array_str(t_agent.var,precision=2,suppress_small=True))
+         
+                delta, mean_delta = hp.monteDiff(t_agent.monte_goal,t_agent.Q)
+                q_delta_list.append(mean_delta)
 
-                print("Final U Table  = \n")
-                print(np.array_str(t_agent.U,precision=2,suppress_small=True))
+                var_delta, var_mean_delta = hp.monteDiff(t_agent.monte_var,t_agent.var)
+                var_delta_list.append(var_mean_delta)
 
                 
-        ########## Result for Each Training Run #############
+                # print("Q Delta difference = ")
+                # print(mean_delta,"\n")
+                # print(np.array_str(delta,precision=2,suppress_small=True))
+
+
+                # print("Final Monte Var = \n")
+                # print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
+                # print("Final Var \n")
+                # print(np.array_str(t_agent.var,precision=2,suppress_small=True))
+                    
+                
+                # print("Var Delta difference = \n")
+                # print(var_mean_delta,"\n")
+                # print(np.array_str(var_delta,precision=2,suppress_small=True))
+            
+                #     print("Final U Table  = \n")
+                #     print(np.array_str(t_agent.U,precision=2,suppress_small=True))
+
+                
+        ########## result for Each Training Run #############
+
+        ########## Monte Carlo Comparison ####################
   
         # hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
 
@@ -179,6 +201,10 @@ def main():
         # print(np.array_str(t_agent.monte_goal,precision=2,suppress_small=True))
         # print("Final Q Table  = \n")
         # print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
+
+        # delta,mean_delta = hp.monteDiff(t_agent.monte_goal,t_agent.Q)
+        # print(np.array_str(delta,precision=2,suppress_small=True))
+        # print(mean_delta)
         
         # print("Final Monte Var = \n")
         # print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
@@ -194,6 +220,13 @@ def main():
         # print("Final Count Table  = ")
         # print(np.array_str(t_agent.visit_count,suppress_small=True))
         # print("No. of plays under {0} game steps = ".format(game_step),done_count)
+
+        q_monte_title = filename + "q"
+        var_monte_title = filename + "var"
+        hp.evalMonteDiff(q_delta_list,max_episode,monte_test_freq,q_monte_title)
+        hp.evalMonteDiff(var_delta_list,max_episode,monte_test_freq,var_monte_title)
+        
+        #####################################################################
         
         no_testing = max_episode/test_freq
         # print("Average goal collected for each episode of test play:",goals)

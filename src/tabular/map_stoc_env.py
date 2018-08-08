@@ -16,7 +16,7 @@ class MapStocEnv(me.MapEnv):
         state = self._agent._current_state
         self._agent.move(action)
 
-        main_action_prob = 0.5
+        main_action_prob = 0.7
         rand_num = np.random.uniform(0,1)
         
         if rand_num < main_action_prob:

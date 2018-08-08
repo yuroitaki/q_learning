@@ -66,6 +66,27 @@ def monteCarlo(t_agent,maze,game_step,no_play,discount):
                     t_agent.monte_var[start_state][chosen_action] = np.var(sample_goals)
 
 
+def monteDiff(monte,estimate):
+
+    delta = (monte - estimate)**2
+    expected_delta = delta.mean()
+    
+    return delta,expected_delta
+    
+
+def evalMonteDiff(delta,num_epi,epi_window,title):
+
+    x = [i for i in range(0,num_epi,epi_window)]
+    fig = plt.figure(figsize=(32,16))
+
+    plt.plot(x,delta)
+    plt.title(title,fontweight='bold')
+    plt.xlabel("Episode No.")
+    plt.ylabel("Delta btwn Monte Carlo and Estimate")
+    plt.show()
+    plt.close()
+
+
 
 def evalEpisode(goals,num_episode,episode_window,title):
 
