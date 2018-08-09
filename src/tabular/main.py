@@ -9,8 +9,8 @@ def main():
     game = "hard_windy_maze"          # windy_maze   # hard_windy_maze
     start_row = 7
     start_col = 0
-    # maze = me.makeMapEnv(game,start_row,start_col)
-    maze  = ms.MapStocEnv(game,start_row,start_col)
+    maze = me.makeMapEnv(game,start_row,start_col)
+    # maze  = ms.MapStocEnv(game,start_row,start_col)
     maze.reset()
     maze.render()
 
@@ -23,17 +23,22 @@ def main():
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
     q_update = "risk"                     # epsilon # count # risk
-    exp_strategy = "greedy"               # "epsilon", "softmax", "greedy"
-    update_policy = "greedy"               # "epsilon", "softmax", "greedy"
+    exp_strategy = "boltzmann"               # "epsilon", "softmax", "greedy", "boltzmann"
+    update_policy = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
+
+    ######### Exploration Strategy #########
+    # params below are used interchangeably between epsilon and boltzmann 
     
-    epsilon_type = "constant"           # "linear"   "exponential"   "constant"
-    epsilon_const = 0.5                 # use a constant epsilon policy
+    epsilon_type = "constant"           # "linear"   "exponential"   "constant" 
+    epsilon_const = 0.1                 # use a constant epsilon policy
 
     epsilon_rate = 0.3               # the polynomial for exponential decay
     max_epsilon = 1.0                      # maximum epsilon value which decays with episodes
     min_epsilon = 0.00001
     diminishing = True               # False to not use the discounted weight for noise in late episodes
 
+    ##########################################
+    
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
     risk_level = 1.0                       # risk seeking level for risk training
 
@@ -46,8 +51,8 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 5000
-    run = 1                                 # number of runs to train the agent
+    max_episode = 3000
+    run = 5                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
@@ -61,7 +66,7 @@ def main():
 
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 1000                     # size of the window for moving average, use factor of 10
+    episode_window = 100                     # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
@@ -156,20 +161,20 @@ def main():
                 # print(np.array_str(t_agent.var,precision=10,suppress_small=True))
 
                 
-            if episode % monte_test_freq == 0:
+            # if episode % monte_test_freq == 0:
                 
-                hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
+            #     hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
                 
                 # print("Final Monte Q = \n")
                 # print(np.array_str(t_agent.monte_goal,precision=2,suppress_small=True))
                 # print("Final Q Table  = \n")
                 # print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
          
-                delta, mean_delta = hp.monteDiff(t_agent.monte_goal,t_agent.Q)
-                q_delta_list.append(mean_delta)
+                # delta, mean_delta = hp.monteDiff(t_agent.monte_goal,t_agent.Q)
+                # q_delta_list.append(mean_delta)
 
-                var_delta, var_mean_delta = hp.monteDiff(t_agent.monte_var,t_agent.var)
-                var_delta_list.append(var_mean_delta)
+                # var_delta, var_mean_delta = hp.monteDiff(t_agent.monte_var,t_agent.var)
+                # var_delta_list.append(var_mean_delta)
 
                 
                 # print("Q Delta difference = ")
@@ -187,8 +192,8 @@ def main():
                 # print(var_mean_delta,"\n")
                 # print(np.array_str(var_delta,precision=2,suppress_small=True))
             
-                #     print("Final U Table  = \n")
-                #     print(np.array_str(t_agent.U,precision=2,suppress_small=True))
+                # print("Final U Table  = \n")
+                # print(np.array_str(t_agent.U,precision=2,suppress_small=True))
 
                 
         ########## result for Each Training Run #############
@@ -221,10 +226,10 @@ def main():
         # print(np.array_str(t_agent.visit_count,suppress_small=True))
         # print("No. of plays under {0} game steps = ".format(game_step),done_count)
 
-        q_monte_title = filename + "q"
-        var_monte_title = filename + "var"
-        hp.evalMonteDiff(q_delta_list,max_episode,monte_test_freq,q_monte_title)
-        hp.evalMonteDiff(var_delta_list,max_episode,monte_test_freq,var_monte_title)
+        # q_monte_title = filename + "q"
+        # var_monte_title = filename + "var"
+        # hp.evalMonteDiff(q_delta_list,max_episode,monte_test_freq,q_monte_title)
+        # hp.evalMonteDiff(var_delta_list,max_episode,monte_test_freq,var_monte_title)
         
         #####################################################################
         
@@ -267,18 +272,18 @@ def main():
         
         ############### Calc the Moving Average of Rewards ####################
 
-        # mov_avg = hp.calcMovingAverage(goals,episode_window)
-        # mov_avg_run.append(mov_avg)
+        mov_avg = hp.calcMovingAverage(goals,episode_window)
+        mov_avg_run.append(mov_avg)
         
         # hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     # to print the current run mov avg
         
 
     ######################### End of Multiple Runs ########################################
     
-    # mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
+    mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
     
-    # hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
-    #                max_episode,episode_window,filename,save,folder)
+    hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
+                   max_episode,episode_window,filename,save,folder)
  
                                         
                                         

@@ -62,6 +62,9 @@ class Tabular_Q_Agent:
             action = np.argmax(table[state,:-1]+np.random.randn(1,self.act_n)*(1/(episode+1)))
         elif self.exp_strategy == "softmax" and self.diminishing == False:
             action = np.argmax(table[state,:-1]+np.random.randn(1,self.act_n))
+
+        elif self.exp_strategy == "boltzmann":
+            action = self.boltzmannStrat(state,episode)
             
         elif self.exp_strategy == "epsilon":
             action = self.epsilonGreedy(state,episode)
@@ -146,7 +149,41 @@ class Tabular_Q_Agent:
         
         return action
 
+    
+    ############ Boltzmann Exploration ############
 
+    def boltzmannStrat(self,state,episode):
+
+        if self.q_update == "risk":
+            table = self.U
+        else:
+            table = self.Q
+
+        if self.epsilon_type == "linear":
+            use_temp = -(episode/self.max_epi) + self.max_epsilon
+            if(use_temp < self.min_epsilon):
+                use_temp = self.min_epsilon
+                
+        elif self.epsilon_type == "exponential":
+            use_temp = self.max_epsilon * (1/(episode+1)**self.epsilon_rate)
+
+        elif self.epsilon_type == "constant":
+            use_temp = self.epsilon_const
+
+        prob_bolt = []
+        sum_prob = 0
+        
+        for act_prob in range(self.act_n):
+            prob = np.exp((table[state,act_prob])/use_temp)
+            prob_bolt.append(prob)
+            sum_prob += prob
+
+        prob_bolt /= sum_prob
+        action = np.random.choice(self.act_n,p=prob_bolt)
+        
+        return action
+
+    
     def play(self,state,episode):
  
         if self.q_update == "risk":
