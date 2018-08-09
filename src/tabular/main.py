@@ -22,15 +22,15 @@ def main():
     discount_factor  = 0.9                          # the discount factor, 0.9 for gauss,epsilon
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
-    q_update = "risk"                     # epsilon # count # risk
-    exp_strategy = "boltzmann"               # "epsilon", "softmax", "greedy", "boltzmann"
-    update_policy = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
+    q_update = "epsilon"                     # epsilon # count # risk
+    exp_strategy = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
+    update_policy = "greedy"               # "epsilon", "greedy", "boltzmann"
 
     ######### Exploration Strategy #########
     # params below are used interchangeably between epsilon and boltzmann 
     
     epsilon_type = "constant"           # "linear"   "exponential"   "constant" 
-    epsilon_const = 0.1                 # use a constant epsilon policy
+    epsilon_const = 0.1                 # use a constant epsilon policy = 0.5, boltzmann uses 0.1
 
     epsilon_rate = 0.3               # the polynomial for exponential decay
     max_epsilon = 1.0                      # maximum epsilon value which decays with episodes
@@ -42,7 +42,7 @@ def main():
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
     risk_level = 1.0                       # risk seeking level for risk training
 
-    initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
+    initial_Q = 1.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
     
     ######### Experiments & Records #########
@@ -57,7 +57,7 @@ def main():
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
     monte_freq = 100                       # frequency of monte carlo sampling for each state-action
-    monte_test_freq = 100                  # frequency of checking variance table 
+    monte_test_freq = 1000                  # frequency of checking variance table 
     
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
@@ -66,7 +66,7 @@ def main():
 
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 100                     # size of the window for moving average, use factor of 10
+    episode_window = 1000                     # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
@@ -155,9 +155,9 @@ def main():
 
             # last_epi = max_episode - episode
             # if(last_epi <= 10):
-                # print("Last {} Q Table  = \n".format(last_epi))
-                # print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
-                # print("Last {} Variance  = \n".format(last_epi))
+            #     print("Last {} Q Table  = \n".format(last_epi))
+            #     print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
+                # print("Last {} Variance = \n".format(last_epi))
                 # print(np.array_str(t_agent.var,precision=10,suppress_small=True))
 
                 

@@ -107,6 +107,10 @@ class Tabular_Q_Agent:
             
         elif self.update_policy == "epsilon":
             new_action = self.epsilonGreedy(new_state,epi)
+            
+        elif self.update_policy == "boltzmann":
+            new_action = self.boltzmannStrat(new_state,epi)
+            
         
         optimal_Q = self.Q[new_state,new_action]
         delta_Q = reward + self.discount_factor*(optimal_Q) - self.Q[state,action]
@@ -180,6 +184,11 @@ class Tabular_Q_Agent:
 
         prob_bolt /= sum_prob
         action = np.random.choice(self.act_n,p=prob_bolt)
+
+        # last_epi = self.max_epi - episode
+        # if(last_epi <= 10):
+        #     print("Probability of actions for state {} = {}".format(state,prob_bolt))
+        #     print("Action chosen = {}".format(action))
         
         return action
 
