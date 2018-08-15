@@ -28,9 +28,9 @@ def main():
 
     ######### Exploration Strategy #########
     # params below are used interchangeably between epsilon and boltzmann 
-    
+
     epsilon_type = "constant"           # "linear"   "exponential"   "constant" 
-    epsilon_const = 0.1                 # use a constant epsilon policy = 0.5, boltzmann uses 0.1
+    epsilon_const = 0.5                 # use a constant epsilon policy = 0.5, boltzmann uses 0.1
 
     epsilon_rate = 0.3               # the polynomial for exponential decay
     max_epsilon = 1.0                      # maximum epsilon value which decays with episodes
@@ -40,10 +40,10 @@ def main():
     ##########################################
     
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
-    risk_level = 1.0                       # risk seeking level for risk training
+    risk_level = 0.1                       # risk seeking level for risk training
 
     initial_Q = 1.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
-    initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
+    initial_M = 0.0                       # an example uses 1/(1-discount_factor) for initial_Q
     
     ######### Experiments & Records #########
     """
@@ -51,22 +51,22 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 3000
+    max_episode = 4000
     run = 5                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
     monte_freq = 100                       # frequency of monte carlo sampling for each state-action
-    monte_test_freq = 1000                  # frequency of checking variance table 
+    monte_test_freq = 10                  # frequency of checking variance table 
     
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
-    game_type = "dtm"                        # dtm  # stoc
-    filename = "{}_{}_exp_{}_runs_{}_epi_type_{}".format(game_type,q_update,run,max_episode,param_set)
+    game_type = "deterministic"                        # deterministic  # stochastic
+    filename = "{}-{}_{}-explore_{}-runs".format(game_type,game,exp_strategy,run)
 
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 1000                     # size of the window for moving average, use factor of 10
+    episode_window = 100                     # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
@@ -79,14 +79,29 @@ def main():
     t_agent = ta.Tabular_Q_Agent(discount_factor,obs_n,act_n,max_epsilon,min_epsilon,exp_strategy,
                                  diminishing,max_episode,q_update,epsilon_type,epsilon_rate,
                                  epsilon_const,update_policy)
-    num_epi = 1000
-    game_cnt = 100
-    run_count = 1
+    num_epi = max_episode
+    game_cnt = game_step
+    run_count = run
+    mov_avg_run = []
     
     for i in range(run_count):
-        rand_rewards = hp.playGame(t_agent,maze,game_cnt,"rand")    # self-created env
+        rand_rewards = hp.playGame(t_agent,maze,game_cnt,num_epi,"rand")    # self-created env
+
         rand_avg_rewards = sum(rand_rewards)/num_epi
         print(rand_avg_rewards)
+        
+        mov_avg = hp.calcMovingAverage(rand_rewards,episode_window)
+        mov_avg_run.append(mov_avg)
+        
+        # hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     # to print the current run mov avg
+    
+    ######################### End of Multiple Runs ########################################
+    
+    mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
+    
+    hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
+                   max_episode,episode_window,filename,save,folder)
+
     '''
 
     ################ Q-Learning ##################
@@ -213,6 +228,7 @@ def main():
         
         # print("Final Monte Var = \n")
         # print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
+
         # print("Final Var \n")
         # print(np.array_str(t_agent.var,precision=2,suppress_small=True))
  
@@ -241,7 +257,6 @@ def main():
         maze.render()
         print("Current run count = ",run_cnt)
 
-        # '''
 
         ############## Store the Result ###############
                 
@@ -285,7 +300,7 @@ def main():
     hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
                    max_episode,episode_window,filename,save,folder)
  
-                                        
+    # '''  
                                         
 if __name__ == "__main__":
     main()
