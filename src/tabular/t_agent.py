@@ -48,7 +48,8 @@ class Tabular_Q_Agent:
     def initialiseU(self,risk_level):
         
         init_var = self.M[:,:-1] - (self.Q[:,:-1]**2)
-        self.U[:,:-1] = self.Q[:,:-1] + risk_level*(init_var)
+        self.var[:,:-1] = init_var
+        self.U[:,:-1] = self.Q[:,:-1] + risk_level*(abs(init_var))
         
         
     def act(self,state,episode):
@@ -122,7 +123,8 @@ class Tabular_Q_Agent:
 
         variance = self.M[state,action] - (self.Q[state,action]**2)
         self.var[state,action] = variance
-        self.U[state,action] = self.Q[state,action] + risk_level*(max(0,variance))
+
+        self.U[state,action] = self.Q[state,action] + risk_level*(abs(variance))
             
 
     ########### Epsilon Greedy ################
