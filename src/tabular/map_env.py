@@ -20,7 +20,18 @@ MAPS = {
         ["O","O","O","O","X","O","X","O"],
         ["O","O","X","O","O","O","O","O"],
         ["O","O","O","O","O","X","O","X"],
+    ],
+    "risky_windy_maze":[
+        ["S","O","O","O","O","O","O","F"],
+        ["X","X","O","X","X","O","X","O"],
+        ["O","X","O","O","X","O","O","O"],
+        ["O","O","O","O","O","O","O","X"],
+        ["O","X","X","X","X","O","O","X"],
+        ["O","O","O","O","X","O","X","O"],
+        ["O","O","X","O","O","O","O","O"],
+        ["O","O","O","O","O","X","O","X"],
     ]
+
 }
 
 
@@ -30,6 +41,7 @@ class MapEnv:
 
         if(maps==None):
             maps = MAPS[map_name]
+        self.map_name = map_name
         self._maps = np.asarray(maps)
         self._map_length, self._map_width = self._maps.shape
         self._obs_space_n = self._map_length * self._map_width
@@ -70,6 +82,11 @@ class MapEnv:
 
         state  = self._agent._current_state
         self._agent.move(action)
+        if self.map_name == "risky_windy_maze":
+            if state == 1 and action == 0:
+                trans = self._trans[state][action]
+                trans[1] = self.reward("S")
+                return trans
         return self._trans[state][action]
 
     
@@ -81,7 +98,7 @@ class MapEnv:
     
     def endGame(self,mark):
         
-        if mark in "XF":
+        if mark in "XFS":
             return True
         else:
             return False
@@ -91,6 +108,13 @@ class MapEnv:
 
         if mark == "F":
             return 1
+        elif mark == "S":
+            treshold_prob = 0.5
+            rand_num = np.random.uniform(0,1)
+            if rand_num > treshold_prob:
+                return 0
+            else:
+                return 2
         else:
             return 0
 

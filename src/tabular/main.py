@@ -6,7 +6,7 @@ import numpy as np
 
 def main():
 
-    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze
+    game = "risky_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
     start_row = 7
     start_col = 0
     maze = me.makeMapEnv(game,start_row,start_col)
@@ -22,8 +22,8 @@ def main():
     discount_factor  = 0.9                          # the discount factor, 0.9 for gauss,epsilon
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
-    q_update = "risk"                     # epsilon # count # risk
-    exp_strategy = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
+    q_update = "epsilon"                     # epsilon # count # risk
+    exp_strategy = "epsilon"               # "epsilon", "softmax", "greedy", "boltzmann"
     update_policy = "greedy"               # "epsilon", "greedy", "boltzmann"
 
     ######### Exploration Strategy #########
@@ -40,9 +40,9 @@ def main():
     ##########################################
     
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
-    risk_level = 1.0                       # risk seeking level for risk training
+    risk_level = 100.0                       # risk seeking level for risk training
 
-    initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
+    initial_Q = 1.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
     
     ######### Experiments & Records #########
@@ -51,13 +51,13 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 1000
-    run = 1                                 # number of runs to train the agent
+    max_episode = 3000
+    run = 10                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
-    monte_freq = 100                       # frequency of monte carlo sampling for each state-action
-    monte_test_freq = 100                  # frequency of checking variance table 
+    monte_freq = 10                       # frequency of monte carlo sampling for each state-action
+    monte_test_freq = 1000                  # frequency of checking variance table 
     
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
@@ -67,8 +67,8 @@ def main():
     ####### Moving Average Graph Plotting #######
 
     episode_window = 100                     # size of the window for moving average, use factor of 10
-    max_reward = 1.0
-    max_r = 1.2                           # upper y bound
+    max_reward = 2.0
+    max_r = 2.2                           # upper y bound
     min_r = 0.0                           # lower y bound
     conf_lvl = 0.95                         # confidence level for confidence interval result plotting
     
@@ -185,9 +185,12 @@ def main():
                 # print(np.array_str(t_agent.var,precision=10,suppress_small=True))
 
                 
-            if episode % monte_test_freq == 0:
+            # if episode % monte_test_freq == 0:
                 
-            #     hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
+            #     print("Action = ",action)
+            #     maze.render()            
+            
+                # hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
                 
                 # print("Final Monte Q = \n")
                 # print(np.array_str(t_agent.monte_goal,precision=2,suppress_small=True))
@@ -208,8 +211,12 @@ def main():
 
                 # print("Final Monte Var = \n")
                 # print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
-                print("Final Var \n")
-                print(np.array_str(t_agent.var,precision=2,suppress_small=True))
+
+                # print("Final Count Table  = ")
+                # print(np.array_str(t_agent.visit_count,suppress_small=True))
+                
+                # print("Final Var \n")
+                # print(np.array_str(t_agent.var,precision=2,suppress_small=True))
                     
                 # print("Final M Table  = \n")
                 # print(np.array_str(t_agent.M,precision=2,suppress_small=True))
@@ -218,8 +225,8 @@ def main():
                 # print(var_mean_delta,"\n")
                 # print(np.array_str(var_delta,precision=2,suppress_small=True))
             
-                print("Final U Table  = \n")
-                print(np.array_str(t_agent.U,precision=2,suppress_small=True))
+                # print("Final U Table  = \n")
+                # print(np.array_str(t_agent.U,precision=2,suppress_small=True))
 
                 
         ########## result for Each Training Run #############
@@ -230,7 +237,11 @@ def main():
 
         # print("Final Monte Q = \n")
         # print(np.array_str(t_agent.monte_goal,precision=2,suppress_small=True))
-        # print("Final Q Table  = \n")
+        
+        print("Final Q Table  = \n")
+        print(np.array_str(t_agent.Q[1],precision=2,suppress_small=True))
+        # print(np.array_str(t_agent.Q[2],precision=2,suppress_small=True))
+        # print(np.array_str(t_agent.Q[3],precision=2,suppress_small=True))
         # print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
 
         # delta,mean_delta = hp.monteDiff(t_agent.monte_goal,t_agent.Q)
@@ -240,21 +251,24 @@ def main():
         # print("Final Monte Var = \n")
         # print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
 
-        # print("Final Var \n")
+        print("Final Var \n")
+        print(np.array_str(t_agent.var[1],precision=2,suppress_small=True))
         # print(np.array_str(t_agent.var,precision=2,suppress_small=True))
  
         # print("Final U Table  = \n")
+        # print(t_agent.U[1][0])
         # print(np.array_str(t_agent.U,precision=2,suppress_small=True))
 
         # print("Final M Table  = \n")
         # print(np.array_str(t_agent.M,precision=2,suppress_small=True))
 
-        # print("Final Count Table  = ")
+        print("Final Count Table  = ")
         # print(np.array_str(t_agent.visit_count,suppress_small=True))
+        print(t_agent.visit_count[1][0])
         # print("No. of plays under {0} game steps = ".format(game_step),done_count)
 
-        # q_monte_title = filename + "q"
-        # var_monte_title = filename + "var"
+        # q_monte_title = filename + "_q"
+        # var_monte_title = filename + "_var"
         # hp.evalMonteDiff(q_delta_list,max_episode,monte_test_freq,q_monte_title)
         # hp.evalMonteDiff(var_delta_list,max_episode,monte_test_freq,var_monte_title)
         

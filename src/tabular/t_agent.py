@@ -48,7 +48,7 @@ class Tabular_Q_Agent:
     def initialiseU(self,risk_level):
         
         init_var = self.M[:,:-1] - (self.Q[:,:-1]**2)
-        self.var[:,:-1] = init_var
+        self.var[:,:-1] = init_var 
         self.U[:,:-1] = self.Q[:,:-1] + risk_level*(abs(init_var))
         
         
@@ -74,6 +74,7 @@ class Tabular_Q_Agent:
             action = self.optimalAction(table,state)
 
         self.visit_count[state,action] += 1
+ 
         return action    
 
 
@@ -230,7 +231,7 @@ class Tabular_Q_Agent:
 
         # alpha = 1/((episode+1)**power)
         alpha = 0.7
-
+    
         return alpha
             
     
