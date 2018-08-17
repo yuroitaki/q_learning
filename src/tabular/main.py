@@ -6,8 +6,8 @@ import numpy as np
 
 def main():
 
-    game = "risky_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
-    start_row = 7
+    game = "windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
+    start_row = 2
     start_col = 0
     maze = me.makeMapEnv(game,start_row,start_col)
     # maze  = ms.MapStocEnv(game,start_row,start_col)
@@ -22,8 +22,8 @@ def main():
     discount_factor  = 0.9                          # the discount factor, 0.9 for gauss,epsilon
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
-    q_update = "epsilon"                     # epsilon # count # risk
-    exp_strategy = "epsilon"               # "epsilon", "softmax", "greedy", "boltzmann"
+    q_update = "vanilla"                     # vanilla # count # risk
+    exp_strategy = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
     update_policy = "greedy"               # "epsilon", "greedy", "boltzmann"
 
     ######### Exploration Strategy #########
@@ -40,9 +40,9 @@ def main():
     ##########################################
     
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
-    risk_level = 100.0                       # risk seeking level for risk training
+    risk_level = 1.0                       # risk seeking level for risk training
 
-    initial_Q = 1.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
+    initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
     
     ######### Experiments & Records #########
@@ -51,8 +51,8 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 3000
-    run = 10                                 # number of runs to train the agent
+    max_episode = 500
+    run = 30                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
@@ -62,48 +62,18 @@ def main():
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
     game_type = "deterministic"                        # deterministic  # stochastic
-    filename = "{}-{}_{}-explore_{}-runs".format(game_type,game,exp_strategy,run)
+    filename = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy,run)
 
     ####### Moving Average Graph Plotting #######
 
     episode_window = 100                     # size of the window for moving average, use factor of 10
-    max_reward = 2.0
-    max_r = 2.2                           # upper y bound
+    max_reward = 1.0
+    max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
     conf_lvl = 0.95                         # confidence level for confidence interval result plotting
     
     ########################################
     
-    ######### Random Action Sampling ##########
-    '''
-    t_agent = ta.Tabular_Q_Agent(discount_factor,obs_n,act_n,max_epsilon,min_epsilon,exp_strategy,
-                                 diminishing,max_episode,q_update,epsilon_type,epsilon_rate,
-                                 epsilon_const,update_policy)
-    num_epi = max_episode
-    game_cnt = game_step
-    run_count = run
-    mov_avg_run = []
-    
-    for i in range(run_count):
-        rand_rewards = hp.playGame(t_agent,maze,game_cnt,num_epi,"rand")    # self-created env
-
-        rand_avg_rewards = sum(rand_rewards)/num_epi
-        print(rand_avg_rewards)
-        
-        mov_avg = hp.calcMovingAverage(rand_rewards,episode_window)
-        mov_avg_run.append(mov_avg)
-        
-        # hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     # to print the current run mov avg
-    
-    ######################### End of Multiple Runs ########################################
-    
-    mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
-    
-    hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
-                   max_episode,episode_window,filename,save,folder)
-
-    '''
-
     ################ Q-Learning ##################
     
     # '''
@@ -137,7 +107,7 @@ def main():
                 
                 learning_rate = t_agent.learningRate(episode,learning_decay)   # can define power value
                                                                                # for diff decay rate
-                if(q_update == "epsilon"):
+                if(q_update == "vanilla"):
                     t_agent.train(new_state,reward,state,action,learning_rate)           # normal training
                 elif(q_update == "count"):
                     t_agent.count_train(new_state,reward,state,action,
@@ -238,8 +208,8 @@ def main():
         # print("Final Monte Q = \n")
         # print(np.array_str(t_agent.monte_goal,precision=2,suppress_small=True))
         
-        print("Final Q Table  = \n")
-        print(np.array_str(t_agent.Q[1],precision=2,suppress_small=True))
+        # print("Final Q Table  = \n")
+        # print(np.array_str(t_agent.Q[1],precision=2,suppress_small=True))
         # print(np.array_str(t_agent.Q[2],precision=2,suppress_small=True))
         # print(np.array_str(t_agent.Q[3],precision=2,suppress_small=True))
         # print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
@@ -251,8 +221,8 @@ def main():
         # print("Final Monte Var = \n")
         # print(np.array_str(t_agent.monte_var,precision=2,suppress_small=True))
 
-        print("Final Var \n")
-        print(np.array_str(t_agent.var[1],precision=2,suppress_small=True))
+        # print("Final Var \n")
+        # print(np.array_str(t_agent.var[1],precision=2,suppress_small=True))
         # print(np.array_str(t_agent.var,precision=2,suppress_small=True))
  
         # print("Final U Table  = \n")
@@ -262,9 +232,9 @@ def main():
         # print("Final M Table  = \n")
         # print(np.array_str(t_agent.M,precision=2,suppress_small=True))
 
-        print("Final Count Table  = ")
+        # print("Final Count Table  = ")
         # print(np.array_str(t_agent.visit_count,suppress_small=True))
-        print(t_agent.visit_count[1][0])
+        # print(t_agent.visit_count[1][0])
         # print("No. of plays under {0} game steps = ".format(game_step),done_count)
 
         # q_monte_title = filename + "_q"
@@ -282,50 +252,82 @@ def main():
         maze.render()
         print("Current run count = ",run_cnt)
 
-
-        ############## Store the Result ###############
-                
-        # if q_update == "count":
-        #     params = [max_episode,discount_factor,learning_rate,beta_cnt_based,initial_Q,
-        #               run_cnt,avg_score]
-        #     string_param = "max_episode,discount_factor,learning_rate,beta_cnt_based,initial_Q,run_cnt,avg_score"
-        #     table = [t_agent.Q]
-        #     table_param = "Q-Table"
-
-            
-        # elif q_update == "risk":
-        #     params = [max_episode,discount_factor,learning_rate,risk_level,initial_Q,
-        #               initial_M,initial_U,run_cnt,avg_score]
-        #     string_param = "max_episode,discount_factor,learning_rate,risk_level,initial_Q,initial_M,initial_U,run_cnt,avg_score"
-        #     table = [t_agent.Q,t_agent.U]
-        #     table_param = "Q-Table, U-Table"
-
-            
-        # elif q_update == "epsilon":
-        #     params = [max_episode,discount_factor,learning_rate,initial_Q,run_cnt,avg_score]
-        #     string_param = "max_episode,discount_factor,learning_rate,initial_Q,run_cnt,avg_score"
-        #     table = [t_agent.Q]
-        #     table_param = "Q-Table"
-
-        # hp.writeResult(filename,folder,params,string_param,run_cnt)
-        # hp.storeTable(filename,folder,table,table_param,run_cnt)
         
         ############### Calc the Moving Average of Rewards ####################
 
-        # mov_avg = hp.calcMovingAverage(goals,episode_window)
-        # mov_avg_run.append(mov_avg)
+        mov_avg = hp.calcMovingAverage(goals,episode_window)
+        mov_avg_run.append(mov_avg)
         
         # hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     # to print the current run mov avg
         
 
     ######################### End of Multiple Runs ########################################
     
-    # mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
+    mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
     
-    # hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
-    #                max_episode,episode_window,filename,save,folder)
+    hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
+                   max_episode,episode_window,filename,save,folder)
  
     # '''  
-                                        
+
+    '''
+    ############## Store the Result ###############
+    
+    if q_update == "count":
+        params = [max_episode,discount_factor,learning_rate,beta_cnt_based,initial_Q,
+                  run_cnt,avg_score]
+        string_param = "max_episode,discount_factor,learning_rate,beta_cnt_based,initial_Q,run_cnt,avg_score"
+        table = [t_agent.Q]
+        table_param = "Q-Table"
+    
+    
+    elif q_update == "risk":
+        params = [max_episode,discount_factor,learning_rate,risk_level,initial_Q,
+                  initial_M,initial_U,run_cnt,avg_score]
+        string_param = "max_episode,discount_factor,learning_rate,risk_level,initial_Q,initial_M,initial_U,run_cnt,avg_score"
+        table = [t_agent.Q,t_agent.U]
+        table_param = "Q-Table, U-Table"
+    
+    
+    elif q_update == "vanilla":
+        params = [max_episode,discount_factor,learning_rate,initial_Q,run_cnt,avg_score]
+        string_param = "max_episode,discount_factor,learning_rate,initial_Q,run_cnt,avg_score"
+        table = [t_agent.Q]
+        table_param = "Q-Table"
+    
+    hp.writeResult(filename,folder,params,string_param,run_cnt)
+    hp.storeTable(filename,folder,table,table_param,run_cnt)
+    
+
+    ######### Random Action Sampling ##########
+    
+    t_agent = ta.Tabular_Q_Agent(discount_factor,obs_n,act_n,max_epsilon,min_epsilon,exp_strategy,
+                                 diminishing,max_episode,q_update,epsilon_type,epsilon_rate,
+                                 epsilon_const,update_policy)
+    num_epi = max_episode
+    game_cnt = game_step
+    run_count = run
+    mov_avg_run = []
+    
+    for i in range(run_count):
+        rand_rewards = hp.playGame(t_agent,maze,game_cnt,num_epi,"rand")    # self-created env
+
+        rand_avg_rewards = sum(rand_rewards)/num_epi
+        print(rand_avg_rewards)
+        
+        mov_avg = hp.calcMovingAverage(rand_rewards,episode_window)
+        mov_avg_run.append(mov_avg)
+        
+        # hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     # to print the current run mov avg
+    
+    ######################### End of Multiple Runs ########################################
+    
+    mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
+    
+    hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
+                   max_episode,episode_window,filename,save,folder)
+
+    '''
+
 if __name__ == "__main__":
     main()
