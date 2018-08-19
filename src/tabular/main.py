@@ -6,14 +6,15 @@ import numpy as np
 
 def main():
 
-    game = "windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
-    start_row = 2
+    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
+    game_type = "deterministic"                        # deterministic  # stochastic
+    start_row = 7
     start_col = 0
     maze = me.makeMapEnv(game,start_row,start_col)
     # maze  = ms.MapStocEnv(game,start_row,start_col)
     maze.reset()
     maze.render()
-
+    
     ########## Q Learning Params ########
     
     obs_n = maze._obs_space_n
@@ -23,7 +24,7 @@ def main():
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
     q_update = "vanilla"                     # vanilla # count # risk
-    exp_strategy = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
+    exp_strategy = "epsilon"               # "epsilon", "softmax", "greedy", "boltzmann"
     update_policy = "greedy"               # "epsilon", "greedy", "boltzmann"
 
     ######### Exploration Strategy #########
@@ -51,22 +52,31 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 500
+    max_episode = 50000
     run = 30                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
     monte_freq = 10                       # frequency of monte carlo sampling for each state-action
-    monte_test_freq = 1000                  # frequency of checking variance table 
+    monte_test_freq = 10                  # frequency of checking variance table 
     
+    if game == "windy_maze":
+        err_col = "pink"                      # error bar color  
+        fmt_col = "r-"                        # mean line color
+    elif game == "hard_windy_maze":
+        err_col = "c"
+        fmt_col = "b-"
+
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
-    game_type = "deterministic"                        # deterministic  # stochastic
+    
     filename = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy,run)
-
+    mean_title = filename + "_mean" + "_const_epsilon"      # filename for mean data pickle
+    err_title = filename  + "_err" + "_const_epsilon"       # filename for error data pickle
+    
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 100                     # size of the window for moving average, use factor of 10
+    episode_window = 10000                     # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
@@ -266,7 +276,9 @@ def main():
     mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
     
     hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
-                   max_episode,episode_window,filename,save,folder)
+                      max_episode,episode_window,filename,save,folder,err_col,fmt_col)
+
+    hp.saveGraphPickle(mean_mov_avg,err_mov_avg,mean_title,err_title)
  
     # '''  
 
@@ -320,13 +332,7 @@ def main():
         
         # hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     # to print the current run mov avg
     
-    ######################### End of Multiple Runs ########################################
-    
-    mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
-    
-    hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
-                   max_episode,episode_window,filename,save,folder)
-
+  
     '''
 
 if __name__ == "__main__":

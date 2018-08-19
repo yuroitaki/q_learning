@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import scipy.stats as st
 import numpy as np
+import pickle
 
 def playGame(t_agent,maze,game_step,no_play,mode="play"):
     
@@ -102,22 +103,67 @@ def evalEpisode(goals,num_episode,episode_window,title):
 
 
     
-def avgEvalEpisode(mean,interval_size,max_r,min_r,num_episode,episode_window,title,save,folder):
+def avgEvalEpisode(mean,interval_size,max_r,min_r,num_episode,
+                   episode_window,title,save,folder,err_col,fmt_col,
+                   label_1=None,mean_2=None,err_2=None,label_2=None,
+                   mean_3=None,err_3=None,label_3=None):
 
     x = [i for i in range(episode_window-1,num_episode)]
-    fig = plt.figure(figsize=(32,16))
+    # fig = plt.figure(figsize=(32,16))            
+    fig, ax = plt.subplots(figsize=(32,16))
     
-    plt.errorbar(x,mean,yerr=interval_size,ecolor='c',fmt='b-')
+    mark_1, cap_1, bar_1 = ax.errorbar(x,mean,yerr=interval_size,ecolor=err_col,fmt=fmt_col,label=label_1,ms=10)
+    for bar in bar_1:
+        bar.set_alpha(0.1)
+    if mean_2 is not None and err_2 is not None:
+        mark_2, cap_2, bar_2 =ax.errorbar(x,mean_2,yerr=err_2,ecolor="pink",fmt="r-",label=label_2,ms=10)
+        [bar.set_alpha(0.1) for bar in bar_2]
+        if mean_3 is not None and err_3 is not None:
+            mark_3, cap_3, bar_3 =ax.errorbar(x,mean_3,yerr=err_3,ecolor="yellow",fmt="g-",label=label_3,ms=10)
+            # for bar in bar_3:
+            bar_3.set_alpha(0.1) 
+    
     plt.ylim(min_r,max_r)
     plt.title(title,fontweight='bold')
     plt.xlabel("Episode No.")
     plt.ylabel("Moving Average Score")
+    plt.legend()
+    
     plt.show()
     if save == True:
         fig.savefig("/vol/bitbucket/ttc14/thesis/fig/tabular/{0}/{1}.png".format(folder,title),dpi=100)
     plt.close()
 
 
+def saveGraphPickle(mean,err,mean_title,err_title):
+
+    mean_file = "/vol/bitbucket/ttc14/thesis/pickle/{}.pkl".format(mean_title)
+    err_file = "/vol/bitbucket/ttc14/thesis/pickle/{}.pkl".format(err_title)
+    mean_open = open(mean_file,"wb")
+    err_open = open(err_file, "wb")
+    pickle.dump(mean,mean_open)
+    pickle.dump(err,err_open)
+    mean_open.close()
+    err_open.close()
+
+
+def readGraphPickle(mean_title,err_title):
+
+    mean_file = "/vol/bitbucket/ttc14/thesis/pickle/{}.pkl".format(mean_title)
+    err_file = "/vol/bitbucket/ttc14/thesis/pickle/{}.pkl".format(err_title)
+
+    mean = None
+    err = None
+    
+    with open(mean_file,"rb") as f_mean:
+        mean = pickle.load(f_mean)
+        
+    with open(err_file,"rb") as err_mean:
+        err = pickle.load(err_mean)
+
+    return mean, err
+
+        
 def calcMovingAverage(score,episode_window):
 
     start = 0
@@ -203,7 +249,46 @@ def confInterval(goal_run,conf_lvl,max_reward):
         
     return mean_conf_goal, interval_goal
 
-        
-    
 
+if __name__ == "__main__":
+
+    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
+    game_type = "deterministic"                        # deterministic  # stochastic
+    q_update = "vanilla"                     # vanilla # count # risk
+    exp_strategy = "epsilon"               # "epsilon", "softmax", "greedy", "boltzmann"
+    run = 30                                 # number of runs to train the agent
+    max_episode = 50000
     
+    episode_window = 10000                     # size of the window for moving average, use factor of 10
+    max_reward = 1.0
+    max_r = 1.2                           # upper y bound
+    min_r = 0.0                           # lower y bound
+    
+    save = False                            # True to save the picture generated from evalEpisode()
+    folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
+    err_col = "c"
+    fmt_col = "b-"
+    
+    filename = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy,run)
+
+    label_1 = "constant"
+    label_2 = "linear"
+    label_3 = "exponential"
+    
+    mean_title_1 = filename + "_mean" + "_const_epsilon"
+    err_title_1 = filename  + "_err" + "_const_epsilon" 
+
+    mean_title_2 = filename + "_mean" + "_lin_epsilon"
+    err_title_2 = filename  + "_err" + "_lin_epsilon" 
+
+    mean_title_3 = filename + "_mean" + "_exp_epsilon"
+    err_title_3 = filename  + "_err" + "_exp_epsilon" 
+
+    mean_1, err_1 = readGraphPickle(mean_title_1,err_title_1)
+    mean_2, err_2 = readGraphPickle(mean_title_2,err_title_2)
+    mean_3, err_3 = readGraphPickle(mean_title_3,err_title_3)
+    
+    avgEvalEpisode(mean_1,err_1,max_r,min_r,
+                   max_episode,episode_window,filename,save,folder,err_col,fmt_col,
+                   label_1,mean_2,err_2,label_2,mean_3,err_3,label_3)
+
