@@ -6,9 +6,9 @@ import numpy as np
 
 def main():
 
-    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
+    game = "windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
     game_type = "deterministic"                        # deterministic  # stochastic
-    start_row = 7
+    start_row = 2
     start_col = 0
     maze = me.makeMapEnv(game,start_row,start_col)
     # maze  = ms.MapStocEnv(game,start_row,start_col)
@@ -24,14 +24,14 @@ def main():
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
     q_update = "vanilla"                     # vanilla # count # risk
-    exp_strategy = "epsilon"               # "epsilon", "softmax", "greedy", "boltzmann"
+    exp_strategy = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
     update_policy = "greedy"               # "epsilon", "greedy", "boltzmann"
 
     ######### Exploration Strategy #########
     # params below are used interchangeably between epsilon and boltzmann 
 
     epsilon_type = "constant"           # "linear"   "exponential"   "constant" 
-    epsilon_const = 0.5                 # use a constant epsilon policy = 0.5, boltzmann uses 0.1
+    epsilon_const = 0.1                  # use a constant epsilon policy = 0.5, boltzmann uses 0.1
 
     epsilon_rate = 0.3               # the polynomial for exponential decay
     max_epsilon = 1.0                      # maximum epsilon value which decays with episodes
@@ -43,7 +43,7 @@ def main():
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
     risk_level = 1.0                       # risk seeking level for risk training
 
-    initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
+    initial_Q = 1.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
     
     ######### Experiments & Records #########
@@ -52,7 +52,7 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 50000
+    max_episode = 50
     run = 30                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
@@ -61,22 +61,25 @@ def main():
     monte_test_freq = 10                  # frequency of checking variance table 
     
     if game == "windy_maze":
-        err_col = "pink"                      # error bar color  
-        fmt_col = "r-"                        # mean line color
+        fmt_col = "r"                        # mean line color
     elif game == "hard_windy_maze":
-        err_col = "c"
-        fmt_col = "b-"
+        fmt_col = "b"
 
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
-    
+
+    tag_1 = "_init_1"          # label for graph legend
     filename = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy,run)
-    mean_title = filename + "_mean" + "_const_epsilon"      # filename for mean data pickle
-    err_title = filename  + "_err" + "_const_epsilon"       # filename for error data pickle
+
+    label_1 = tag_1[1:]
+    mov_title = filename + tag_1      # filename for mov avg data pickle
+
+    # label_1 = exp_strategy
+    # mov_title = filename
     
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 10000                     # size of the window for moving average, use factor of 10
+    episode_window = 10                     # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
@@ -273,13 +276,20 @@ def main():
 
     ######################### End of Multiple Runs ########################################
     
-    mean_mov_avg, err_mov_avg = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
-    
-    hp.avgEvalEpisode(mean_mov_avg,err_mov_avg,max_r,min_r,
-                      max_episode,episode_window,filename,save,folder,err_col,fmt_col)
-
-    hp.saveGraphPickle(mean_mov_avg,err_mov_avg,mean_title,err_title)
+    mov_data = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
  
+    mean_data = [mov_data[0]]
+    err_up_data = [mov_data[1]]
+    err_down_data = [mov_data[2]]
+    label_data= [label_1]
+    
+    hp.evalAvg(mean_data,err_up_data,err_down_data,max_r,min_r,
+               max_episode,episode_window,filename,save,
+               folder,fmt_col,label_data)
+
+    hp.saveGraphData(mov_data,mov_title)
+
+
     # '''  
 
     '''

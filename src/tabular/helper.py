@@ -102,27 +102,37 @@ def evalEpisode(goals,num_episode,episode_window,title):
     plt.close()
 
 
-    
-def avgEvalEpisode(mean,interval_size,max_r,min_r,num_episode,
-                   episode_window,title,save,folder,err_col,fmt_col,
-                   label_1=None,mean_2=None,err_2=None,label_2=None,
-                   mean_3=None,err_3=None,label_3=None):
+def evalAvg(mean,err_up,err_down,max_r,min_r,num_episode,
+            episode_window,title,save,folder,fmt_col,label):
 
     x = [i for i in range(episode_window-1,num_episode)]
-    # fig = plt.figure(figsize=(32,16))            
-    fig, ax = plt.subplots(figsize=(32,16))
+    fig = plt.figure(figsize=(32,16))            
+
+    mean_0 = mean[0]
+    err_up_0 = err_up[0]
+    err_down_0 = err_down[0]
+    label_0 = label[0]
+    plt.plot(x,mean_0,color=fmt_col,label=label_0)
+    plt.fill_between(x,mean_0+err_up_0,mean_0-err_down_0,color=fmt_col,alpha=0.2)
     
-    mark_1, cap_1, bar_1 = ax.errorbar(x,mean,yerr=interval_size,ecolor=err_col,fmt=fmt_col,label=label_1,ms=10)
-    for bar in bar_1:
-        bar.set_alpha(0.1)
-    if mean_2 is not None and err_2 is not None:
-        mark_2, cap_2, bar_2 =ax.errorbar(x,mean_2,yerr=err_2,ecolor="pink",fmt="r-",label=label_2,ms=10)
-        [bar.set_alpha(0.1) for bar in bar_2]
-        if mean_3 is not None and err_3 is not None:
-            mark_3, cap_3, bar_3 =ax.errorbar(x,mean_3,yerr=err_3,ecolor="yellow",fmt="g-",label=label_3,ms=10)
-            # for bar in bar_3:
-            bar_3.set_alpha(0.1) 
+    len_mean = len(mean)
     
+    if len_mean > 1:
+        mean_1 = mean[1]
+        err_up_1 = err_up[1]
+        err_down_1 = err_down[1]
+        label_1 = label[1]
+        plt.plot(x,mean_1,color="r",label=label_1,alpha=0.8)
+        plt.fill_between(x,mean_1+err_up_1,mean_1-err_down_1,color="r",alpha=0.2)
+
+        if len_mean > 2:
+            mean_2 = mean[2]
+            err_up_2 = err_up[2]
+            err_down_2 = err_down[2]
+            label_2 = label[2]
+            plt.plot(x,mean_2,color="g",label=label_2,alpha=0.8)
+            plt.fill_between(x,mean_2+err_up_2,mean_2-err_down_2,color="g",alpha=0.2)
+            
     plt.ylim(min_r,max_r)
     plt.title(title,fontweight='bold')
     plt.xlabel("Episode No.")
@@ -134,34 +144,28 @@ def avgEvalEpisode(mean,interval_size,max_r,min_r,num_episode,
         fig.savefig("/vol/bitbucket/ttc14/thesis/fig/tabular/{0}/{1}.png".format(folder,title),dpi=100)
     plt.close()
 
-
-def saveGraphPickle(mean,err,mean_title,err_title):
-
-    mean_file = "/vol/bitbucket/ttc14/thesis/pickle/{}.pkl".format(mean_title)
-    err_file = "/vol/bitbucket/ttc14/thesis/pickle/{}.pkl".format(err_title)
-    mean_open = open(mean_file,"wb")
-    err_open = open(err_file, "wb")
-    pickle.dump(mean,mean_open)
-    pickle.dump(err,err_open)
-    mean_open.close()
-    err_open.close()
-
-
-def readGraphPickle(mean_title,err_title):
-
-    mean_file = "/vol/bitbucket/ttc14/thesis/pickle/{}.pkl".format(mean_title)
-    err_file = "/vol/bitbucket/ttc14/thesis/pickle/{}.pkl".format(err_title)
-
-    mean = None
-    err = None
     
-    with open(mean_file,"rb") as f_mean:
-        mean = pickle.load(f_mean)
-        
-    with open(err_file,"rb") as err_mean:
-        err = pickle.load(err_mean)
+def saveGraphData(data,title):
 
-    return mean, err
+    data_file = "/vol/bitbucket/ttc14/thesis/pickle/{}.pkl".format(title)
+    data_open = open(data_file,"wb")
+    pickle.dump(data,data_open)
+    data_open.close()
+    
+
+def readGraphData(title):
+
+    data_file = "/vol/bitbucket/ttc14/thesis/pickle/{}.pkl".format(title)
+
+    data = None
+    
+    with open(data_file,"rb") as f:
+        data = pickle.load(f)
+
+    mean, err_up, err_down = data
+    
+    return mean, err_up, err_down
+
 
         
 def calcMovingAverage(score,episode_window):
@@ -212,8 +216,9 @@ def storeTable(filename,folder,table,table_param,run):
 def confInterval(goal_run,conf_lvl,max_reward):
 
     goal_len = len(goal_run[0])
-    mean_conf_goal = []
-    interval_goal = np.zeros((2,goal_len))
+    mean_conf_goal = np.zeros((goal_len,))
+    err_up_goal = np.zeros((goal_len,))
+    err_down_goal = np.zeros((goal_len,))
     
     for i in range(goal_len):
         series_reward = []
@@ -242,53 +247,86 @@ def confInterval(goal_run,conf_lvl,max_reward):
         if(mean + upper_size > max_reward):
             upper_size = max_reward - mean
             
-        interval_goal[0][i] = lower_size
-        interval_goal[1][i] = upper_size
-
-        mean_conf_goal.append(mean)        
+        err_down_goal[i] = lower_size
+        err_up_goal[i] = upper_size
+        mean_conf_goal[i] = mean       
         
-    return mean_conf_goal, interval_goal
+    return mean_conf_goal, err_up_goal, err_down_goal
 
 
 if __name__ == "__main__":
 
     game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
     game_type = "deterministic"                        # deterministic  # stochastic
-    q_update = "vanilla"                     # vanilla # count # risk
-    exp_strategy = "epsilon"               # "epsilon", "softmax", "greedy", "boltzmann"
-    run = 30                                 # number of runs to train the agent
-    max_episode = 50000
+    q_update = "count"                 # vanilla # count # risk
+    exp_strategy = "various"               # "epsilon", "various", "greedy", "boltzmann"
     
-    episode_window = 10000                     # size of the window for moving average, use factor of 10
+    run = 30                                 # number of runs to train the agent
+    max_episode = 4000
+    
+    episode_window = 1000                 # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
-    
+
+    fmt_col = "b"
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
-    err_col = "c"
-    fmt_col = "b-"
-    
+
     filename = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy,run)
 
-    label_1 = "constant"
-    label_2 = "linear"
-    label_3 = "exponential"
+    tag_1 = "_init_1"
+    tag_2 = "_init_1"
+    tag_3 = "_init_1"
+
+    ####### Solo Exploration ##############
     
-    mean_title_1 = filename + "_mean" + "_const_epsilon"
-    err_title_1 = filename  + "_err" + "_const_epsilon" 
-
-    mean_title_2 = filename + "_mean" + "_lin_epsilon"
-    err_title_2 = filename  + "_err" + "_lin_epsilon" 
-
-    mean_title_3 = filename + "_mean" + "_exp_epsilon"
-    err_title_3 = filename  + "_err" + "_exp_epsilon" 
-
-    mean_1, err_1 = readGraphPickle(mean_title_1,err_title_1)
-    mean_2, err_2 = readGraphPickle(mean_title_2,err_title_2)
-    mean_3, err_3 = readGraphPickle(mean_title_3,err_title_3)
+    # label_1 = tag_1[1:]
+    # label_2 = tag_2[1:]
+    # label_3 = tag_3[1:]
     
-    avgEvalEpisode(mean_1,err_1,max_r,min_r,
-                   max_episode,episode_window,filename,save,folder,err_col,fmt_col,
-                   label_1,mean_2,err_2,label_2,mean_3,err_3,label_3)
+    # title_1 = filename + tag_1
+    # title_2 = filename + tag_2
+    # title_3 = filename + tag_3
+
+    ######## Secondary Exploration ########
+    
+    exp_strategy_1 = "epsilon"               # "epsilon", "softmax", "greedy", "boltzmann"
+    exp_strategy_2 = "boltzmann"               # "epsilon", "softmax", "greedy", "boltzmann"
+    exp_strategy_3 = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
+
+    label_1 = exp_strategy_1
+    label_2 = exp_strategy_2
+    label_3 = exp_strategy_3
+
+    filename_1 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy_1,run)
+    filename_2 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy_2,run)
+    filename_3 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy_3,run)
+    
+    title_1 = filename_1 
+    title_2 = filename_2 
+    title_3 = filename_3 
+
+    ################################################
+    
+    mean_1, err_up_1, err_down_1 = readGraphData(title_1)
+    mean_2, err_up_2, err_down_2 = readGraphData(title_2)
+    mean_3, err_up_3, err_down_3 = readGraphData(title_3)
+
+
+    mean = [mean_1,mean_2,mean_3]
+    err_up = [err_up_1,err_up_2,err_up_3]
+    err_down = [err_down_1,err_down_2,err_down_3]
+    label = [label_1,label_2,label_3]
+
+    # mean = [mean_1]
+    # err_up = [err_up_1]
+    # err_down = [err_down_1]
+    # label = [label_1]
+    
+    # filename += tag_1
+    
+    evalAvg(mean,err_up,err_down,max_r,min_r,
+            max_episode,episode_window,filename,save,
+            folder,fmt_col,label)
 
