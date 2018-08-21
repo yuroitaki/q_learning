@@ -1,5 +1,7 @@
 import numpy as np
 import sys
+import matplotlib.pyplot as plt
+import seaborn as sns
 from termcolor import cprint
 
 from tabular import map_agent as ag
@@ -35,6 +37,19 @@ MAPS = {
 }
 
 
+ACTIONS = {
+    # 0: "L",
+    # 1: "U",
+    # 2: "R",
+    # 3: "D"
+    0: "←",
+    1: "↑",
+    2: "→",
+    3: "↓"
+
+}
+
+
 class MapEnv:
     
     def __init__(self,map_name,maps,start_r,start_c):
@@ -50,7 +65,12 @@ class MapEnv:
         self._start_state = self.toState(self._start_row,self._start_col)
         
         self._agent = ag.MapAgent(self,self._start_state,self._start_row,self._start_col)
-        self._trans = {state: {action: [] for action in range(self._agent._action_space_n)} for state in range(self._obs_space_n)}                
+        self._trans = {state: {action: [] for action in range(self._agent._action_space_n)} for state in range(self._obs_space_n)}
+
+        self.value_map = np.zeros([self._map_length,self._map_width])
+        # self.action_map = {row: {col: "" for col in range(self._map_width)} for row in range(self._map_length)}
+        self.action_map = np.empty([self._map_length,self._map_width],dtype="U4")
+        
         self.computeTransition()
         
         
@@ -123,7 +143,7 @@ class MapEnv:
         
         return (row * self._map_width) + col
 
-
+    
     def reset(self):
 
         self._agent.updateState(self._start_row,self._start_col)
@@ -159,15 +179,48 @@ class MapEnv:
 
                 if mark == "O":
                     for action in range(self._agent._action_space_n):
-                        # table[state][action] = val                          # yields better result, faster to converge
+                        table[state][action] = val                          # yields better result, faster to converge
                         # if val > 0.1:
                         #     table[state][action] = val + np.random.uniform(-0.1,0.1)
                         # else:
                         #     table[state][action] = val + np.random.uniform(-0.1,0.1)
-                        table[state][action] = val + np.random.uniform()
+                        # table[state][action] = val + np.random.uniform()
 
             
+
+    def visualiseValFunc(self,val_func,act_choice):
+
+        self.convertValFunc(val_func,act_choice)
+        sns.heatmap(self.value_map,annot=self.action_map,xticklabels=False,yticklabels=False,fmt='')
+        plt.show()
                 
+
+    def convertValFunc(self,val_func,act_choice):
+        
+        row = 0
+        for state in range(self._obs_space_n):
+            col = state % self._map_width
+            self.value_map[row][col] = val_func[state]
+            
+            mark = self._maps[row][col]
+            if (mark == "O"):
+                action = self.convertActionToLetter(act_choice[state])
+                self.action_map[row][col] = action
+            
+            if col == self._map_width - 1:
+                row += 1
+
+        
+    def convertActionToLetter(self,act_list):
+
+        act_letter = ""
+        
+        for act in act_list:
+            act_letter += ACTIONS[act]
+
+        return act_letter
+        
+        
         
 def makeMapEnv(map_name,start_r=2,start_c=0,maps=None):
         

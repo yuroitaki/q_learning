@@ -6,9 +6,9 @@ import numpy as np
 
 def main():
 
-    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
+    game = "windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
     game_type = "deterministic"                        # deterministic  # stochastic
-    start_row = 7
+    start_row = 2
     start_col = 0
     maze = me.makeMapEnv(game,start_row,start_col)
     # maze  = ms.MapStocEnv(game,start_row,start_col)
@@ -24,7 +24,7 @@ def main():
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
     q_update = "vanilla"                     # vanilla # count # risk
-    exp_strategy = "boltzmann"               # "epsilon", "softmax", "greedy", "boltzmann"
+    exp_strategy = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
     update_policy = "greedy"               # "epsilon", "greedy", "boltzmann"
 
     ######### Exploration Strategy #########
@@ -43,7 +43,7 @@ def main():
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
     risk_level = 1.0                       # risk seeking level for risk training
 
-    initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
+    initial_Q = 1.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
     
     ######### Experiments & Records #########
@@ -52,8 +52,8 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 350
-    run = 30                                 # number of runs to train the agent
+    max_episode = 50
+    run = 1                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
@@ -79,7 +79,7 @@ def main():
     
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 100                     # size of the window for moving average, use factor of 10
+    episode_window = 10                     # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
@@ -168,11 +168,13 @@ def main():
                 # print(np.array_str(t_agent.var,precision=10,suppress_small=True))
 
                 
-            # if episode % monte_test_freq == 0:
+            if episode % monte_test_freq == 0:
                 
-            #     print("Action = ",action)
-            #     maze.render()            
-            
+                # print("Action = ",action)
+                # maze.render()
+                t_agent.extractValue(t_agent.Q)
+                maze.visualiseValFunc(t_agent.value_func,t_agent.action_choice)
+                
                 # hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
                 
                 # print("Final Monte Q = \n")
@@ -215,7 +217,19 @@ def main():
         ########## result for Each Training Run #############
 
         ########## Monte Carlo Comparison ####################
-  
+
+        t_agent.extractValue(t_agent.Q)
+        # print("Final Value Table  = \n")
+        # print(np.array_str(t_agent.value_func,precision=2,suppress_small=True))
+        # print("Final Action Choice Table  = \n")
+        # print(t_agent.action_choice)
+
+        # maze.convertValFunc(t_agent.value_func)
+        # print("Final Value Map  = \n")
+        # print(np.array_str(maze.value_map,precision=2,suppress_small=True))
+        maze.visualiseValFunc(t_agent.value_func,t_agent.action_choice)
+
+        
         # hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
 
         # print("Final Monte Q = \n")
@@ -268,26 +282,26 @@ def main():
         
         ############### Calc the Moving Average of Rewards ####################
 
-        mov_avg = hp.calcMovingAverage(goals,episode_window)
-        mov_avg_run.append(mov_avg)
+        # mov_avg = hp.calcMovingAverage(goals,episode_window)
+        # mov_avg_run.append(mov_avg)
         
         # hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     # to print the current run mov avg
         
 
     ######################### End of Multiple Runs ########################################
     
-    mov_data = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
+    # mov_data = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
  
-    mean_data = [mov_data[0]]
-    err_up_data = [mov_data[1]]
-    err_down_data = [mov_data[2]]
-    label_data= [label_1]
+    # mean_data = [mov_data[0]]
+    # err_up_data = [mov_data[1]]
+    # err_down_data = [mov_data[2]]
+    # label_data= [label_1]
     
-    hp.evalAvg(mean_data,err_up_data,err_down_data,max_r,min_r,
-               max_episode,episode_window,filename,save,
-               folder,fmt_col,label_data)
+    # hp.evalAvg(mean_data,err_up_data,err_down_data,max_r,min_r,
+    #            max_episode,episode_window,filename,save,
+    #            folder,fmt_col,label_data)
 
-    hp.saveGraphData(mov_data,mov_title) 
+    # hp.saveGraphData(mov_data,mov_title) 
 
 
     # '''  
