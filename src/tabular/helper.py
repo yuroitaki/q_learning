@@ -122,8 +122,8 @@ def evalAvg(mean,err_up,err_down,max_r,min_r,num_episode,
         err_up_1 = err_up[1]
         err_down_1 = err_down[1]
         label_1 = label[1]
-        plt.plot(x,mean_1,color="r",label=label_1,alpha=0.8)
-        plt.fill_between(x,mean_1+err_up_1,mean_1-err_down_1,color="r",alpha=0.2)
+        plt.plot(x,mean_1,color="m",label=label_1,alpha=0.8)
+        plt.fill_between(x,mean_1+err_up_1,mean_1-err_down_1,color="m",alpha=0.2)
 
         if len_mean > 2:
             mean_2 = mean[2]
@@ -132,6 +132,16 @@ def evalAvg(mean,err_up,err_down,max_r,min_r,num_episode,
             label_2 = label[2]
             plt.plot(x,mean_2,color="g",label=label_2,alpha=0.8)
             plt.fill_between(x,mean_2+err_up_2,mean_2-err_down_2,color="g",alpha=0.2)
+
+
+            if len_mean > 3:
+                mean_3 = mean[3]
+                err_up_3 = err_up[3]
+                err_down_3 = err_down[3]
+                label_3 = label[3]
+                plt.plot(x,mean_3,color="c",label=label_3,alpha=0.8)
+                plt.fill_between(x,mean_3+err_up_3,mean_3-err_down_3,color="c",alpha=0.2)
+ 
             
     plt.ylim(min_r,max_r)
     plt.title(title,fontweight='bold')
@@ -258,73 +268,91 @@ if __name__ == "__main__":
 
     game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
     game_type = "deterministic"                        # deterministic  # stochastic
-    q_update = "count"                 # vanilla # count # risk
-    exp_strategy = "various"               # "epsilon", "various", "greedy", "boltzmann"
+    q_update = "vanilla"                 # vanilla # count # risk
+    exp_strategy = "boltzmann"               # "epsilon", "various", "greedy", "boltzmann"
     
     run = 30                                 # number of runs to train the agent
-    max_episode = 4000
+    max_episode = 350
     
-    episode_window = 1000                 # size of the window for moving average, use factor of 10
+    episode_window = 100                 # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
 
-    fmt_col = "b"
+    fmt_col = "g"
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
 
     filename = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy,run)
 
     tag_1 = "_init_1"
-    tag_2 = "_init_1"
-    tag_3 = "_init_1"
+    tag_2 = "_init_noise"
+    # tag_3 = "_init_noise"
+    # tag_4 = "_init_noise"
+    
 
     ####### Solo Exploration ##############
     
-    # label_1 = tag_1[1:]
-    # label_2 = tag_2[1:]
+    label_1 = tag_1[1:]
+    label_2 = tag_2[1:]
     # label_3 = tag_3[1:]
     
-    # title_1 = filename + tag_1
-    # title_2 = filename + tag_2
+    title_1 = filename + tag_1
+    title_2 = filename + tag_2
     # title_3 = filename + tag_3
 
     ######## Secondary Exploration ########
     
-    exp_strategy_1 = "epsilon"               # "epsilon", "softmax", "greedy", "boltzmann"
+    exp_strategy_1 = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
     exp_strategy_2 = "boltzmann"               # "epsilon", "softmax", "greedy", "boltzmann"
     exp_strategy_3 = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
 
-    label_1 = exp_strategy_1
-    label_2 = exp_strategy_2
-    label_3 = exp_strategy_3
+    # label_1 = exp_strategy_1 + tag_1
+    # label_2 = exp_strategy_2 + tag_2
+    # label_3 = exp_strategy_1 + tag_3
+    # label_4 = exp_strategy_2 + tag_4
 
     filename_1 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy_1,run)
     filename_2 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy_2,run)
-    filename_3 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy_3,run)
+    filename_3 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy_1,run)
+    filename_4 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy_2,run)
     
-    title_1 = filename_1 
-    title_2 = filename_2 
-    title_3 = filename_3 
+    # title_1 = filename_1 + tag_1
+    # title_2 = filename_2 + tag_2
+    # title_3 = filename_3 + tag_3
+    # title_4 = filename_4 + tag_4
 
     ################################################
     
     mean_1, err_up_1, err_down_1 = readGraphData(title_1)
     mean_2, err_up_2, err_down_2 = readGraphData(title_2)
-    mean_3, err_up_3, err_down_3 = readGraphData(title_3)
+    # mean_3, err_up_3, err_down_3 = readGraphData(title_3)
+    # mean_4, err_up_4, err_down_4 = readGraphData(title_4)
+    
+    mean = [mean_1,mean_2]
+    err_up = [err_up_1,err_up_2]
+    err_down = [err_down_1,err_down_2]
+    label = [label_1,label_2]
 
 
-    mean = [mean_1,mean_2,mean_3]
-    err_up = [err_up_1,err_up_2,err_up_3]
-    err_down = [err_down_1,err_down_2,err_down_3]
-    label = [label_1,label_2,label_3]
+    # mean = [mean_1,mean_2,mean_3]
+    # err_up = [err_up_1,err_up_2,err_up_3]
+    # err_down = [err_down_1,err_down_2,err_down_3]
+    # label = [label_1,label_2,label_3]
+
+    
+    # mean = [mean_1,mean_2,mean_3,mean_4]
+    # err_up = [err_up_1,err_up_2,err_up_3,err_up_4]
+    # err_down = [err_down_1,err_down_2,err_down_3,err_down_4]
+    # label = [label_1,label_2,label_3,label_4]
 
     # mean = [mean_1]
     # err_up = [err_up_1]
     # err_down = [err_down_1]
     # label = [label_1]
     
-    # filename += tag_1
+    filename += tag_1
+    filename += tag_2
     
     evalAvg(mean,err_up,err_down,max_r,min_r,
             max_episode,episode_window,filename,save,

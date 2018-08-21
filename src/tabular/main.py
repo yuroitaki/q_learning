@@ -6,9 +6,9 @@ import numpy as np
 
 def main():
 
-    game = "windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
+    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
     game_type = "deterministic"                        # deterministic  # stochastic
-    start_row = 2
+    start_row = 7
     start_col = 0
     maze = me.makeMapEnv(game,start_row,start_col)
     # maze  = ms.MapStocEnv(game,start_row,start_col)
@@ -24,7 +24,7 @@ def main():
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
     q_update = "vanilla"                     # vanilla # count # risk
-    exp_strategy = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
+    exp_strategy = "boltzmann"               # "epsilon", "softmax", "greedy", "boltzmann"
     update_policy = "greedy"               # "epsilon", "greedy", "boltzmann"
 
     ######### Exploration Strategy #########
@@ -43,7 +43,7 @@ def main():
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
     risk_level = 1.0                       # risk seeking level for risk training
 
-    initial_Q = 1.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
+    initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
     
     ######### Experiments & Records #########
@@ -52,7 +52,7 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 50
+    max_episode = 350
     run = 30                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
@@ -68,7 +68,7 @@ def main():
     save = False                            # True to save the picture generated from evalEpisode()
     folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
 
-    tag_1 = "_init_1"          # label for graph legend
+    tag_1 = "_init_noise"          # label for graph legend
     filename = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy,run)
 
     label_1 = tag_1[1:]
@@ -79,7 +79,7 @@ def main():
     
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 10                     # size of the window for moving average, use factor of 10
+    episode_window = 100                     # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
@@ -287,7 +287,7 @@ def main():
                max_episode,episode_window,filename,save,
                folder,fmt_col,label_data)
 
-    hp.saveGraphData(mov_data,mov_title)
+    hp.saveGraphData(mov_data,mov_title) 
 
 
     # '''  
@@ -347,3 +347,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
