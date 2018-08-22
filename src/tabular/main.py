@@ -6,9 +6,9 @@ import numpy as np
 
 def main():
 
-    game = "windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
+    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
     game_type = "deterministic"                        # deterministic  # stochastic
-    start_row = 2
+    start_row = 7
     start_col = 0
     maze = me.makeMapEnv(game,start_row,start_col)
     # maze  = ms.MapStocEnv(game,start_row,start_col)
@@ -23,14 +23,14 @@ def main():
     discount_factor  = 0.9                          # the discount factor, 0.9 for gauss,epsilon
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
-    q_update = "vanilla"                     # vanilla # count # risk
+    q_update = "risk"                     # vanilla # count # risk
     exp_strategy = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
     update_policy = "greedy"               # "epsilon", "greedy", "boltzmann"
 
     ######### Exploration Strategy #########
     # params below are used interchangeably between epsilon and boltzmann 
 
-    epsilon_type = "constant"           # "linear"   "exponential"   "constant" 
+    epsilon_type = "constant"           #"linear"   "exponential"   "constant" 
     epsilon_const = 0.1                  # use a constant epsilon policy = 0.5, boltzmann uses 0.1
 
     epsilon_rate = 0.3               # the polynomial for exponential decay
@@ -43,7 +43,7 @@ def main():
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
     risk_level = 1.0                       # risk seeking level for risk training
 
-    initial_Q = 1.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
+    initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 1.0                       # an example uses 1/(1-discount_factor) for initial_Q
     
     ######### Experiments & Records #########
@@ -52,13 +52,13 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 50
-    run = 1                                 # number of runs to train the agent
+    max_episode = 500
+    run = 30                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
     monte_freq = 10                       # frequency of monte carlo sampling for each state-action
-    monte_test_freq = 10                  # frequency of checking variance table 
+    monte_test_freq = 100                  # frequency of checking variance table 
     
     if game == "windy_maze":
         fmt_col = "r"                        # mean line color
@@ -66,24 +66,34 @@ def main():
         fmt_col = "b"
 
     save = False                            # True to save the picture generated from evalEpisode()
-    folder = "hard_windy_maze"              # windy_maze  # hard_windy_maze
+    folder = "final"              # windy_maze  # hard_windy_maze
 
-    tag_1 = "_init_noise"          # label for graph legend
+    tag_1 = "_vanilla"          # label for graph legend
     filename = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy,run)
-
     label_1 = tag_1[1:]
     mov_title = filename + tag_1      # filename for mov avg data pickle
 
     # label_1 = exp_strategy
     # mov_title = filename
+
+
+    ########## Plot Map ##################
+    
+    vis_file = "{}-{}_{}-strat_{}-explore".format(game_type,game,q_update,exp_strategy)
+    plot_type_1 = "act"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
+    plot_table_1 = "Q"               # U # Q # var 
+    plot_type_2 = "act"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
+    plot_table_2 = "U"               # U # Q # var 
+    plot_type_3 = "val_act"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
+    plot_table_3 = "U"               # U # Q # var 
     
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 10                     # size of the window for moving average, use factor of 10
+    episode_window = 100               # size of the window for moving average, use factor of 10
     max_reward = 1.0
-    max_r = 1.2                           # upper y bound
-    min_r = 0.0                           # lower y bound
-    conf_lvl = 0.95                         # confidence level for confidence interval result plotting
+    max_r = 1.2                       # upper y bound
+    min_r = 0.0                       # lower y bound
+    conf_lvl = 0.95                   # confidence level for confidence interval result plotting
     
     ########################################
     
@@ -162,18 +172,23 @@ def main():
 
             # last_epi = max_episode - episode
             # if(last_epi <= 10):
-            #     print("Last {} Q Table  = \n".format(last_epi))
-            #     print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
+            #     hp.plotMap(t_agent,maze,plot_table_3,plot_type_3,vis_file,episode)
+            
+                # print("Last {} Q Table  = \n".format(last_epi))
+                # print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
                 # print("Last {} Variance = \n".format(last_epi))
                 # print(np.array_str(t_agent.var,precision=10,suppress_small=True))
 
                 
-            if episode % monte_test_freq == 0:
-                
+            # if episode % monte_test_freq == 0:
+
+            #     hp.plotMap(t_agent,maze,plot_table_1,plot_type_1,vis_file,episode)
+                # hp.plotMap(t_agent,maze,plot_table_2,plot_type_2,vis_file,episode)
+                # hp.plotMap(t_agent,maze,plot_table_3,plot_type_3,vis_file,episode)
+
                 # print("Action = ",action)
                 # maze.render()
-                t_agent.extractValue(t_agent.Q)
-                maze.visualiseValFunc(t_agent.value_func,t_agent.action_choice)
+                # hp.plotMap(t_agent,maze,t_agent.Q,"val_func")
                 
                 # hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
                 
@@ -218,17 +233,9 @@ def main():
 
         ########## Monte Carlo Comparison ####################
 
-        t_agent.extractValue(t_agent.Q)
-        # print("Final Value Table  = \n")
-        # print(np.array_str(t_agent.value_func,precision=2,suppress_small=True))
-        # print("Final Action Choice Table  = \n")
-        # print(t_agent.action_choice)
-
-        # maze.convertValFunc(t_agent.value_func)
-        # print("Final Value Map  = \n")
-        # print(np.array_str(maze.value_map,precision=2,suppress_small=True))
-        maze.visualiseValFunc(t_agent.value_func,t_agent.action_choice)
-
+        # hp.plotMap(t_agent,maze,plot_table_1,plot_type_1,vis_file,episode)
+        # hp.plotMap(t_agent,maze,plot_table_2,plot_type_2,vis_file,episode)
+        # hp.plotMap(t_agent,maze,plot_table_3,plot_type_3,vis_file,episode)
         
         # hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
 
@@ -282,24 +289,24 @@ def main():
         
         ############### Calc the Moving Average of Rewards ####################
 
-        # mov_avg = hp.calcMovingAverage(goals,episode_window)
-        # mov_avg_run.append(mov_avg)
+        mov_avg = hp.calcMovingAverage(goals,episode_window)
+        mov_avg_run.append(mov_avg)
         
         # hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     # to print the current run mov avg
         
 
     ######################### End of Multiple Runs ########################################
     
-    # mov_data = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
+    mov_data = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
  
-    # mean_data = [mov_data[0]]
-    # err_up_data = [mov_data[1]]
-    # err_down_data = [mov_data[2]]
-    # label_data= [label_1]
+    mean_data = [mov_data[0]]
+    err_up_data = [mov_data[1]]
+    err_down_data = [mov_data[2]]
+    label_data= [label_1]
     
-    # hp.evalAvg(mean_data,err_up_data,err_down_data,max_r,min_r,
-    #            max_episode,episode_window,filename,save,
-    #            folder,fmt_col,label_data)
+    hp.evalAvg(mean_data,err_up_data,err_down_data,max_r,min_r,
+               max_episode,episode_window,filename,save,
+               folder,fmt_col,label_data)
 
     # hp.saveGraphData(mov_data,mov_title) 
 

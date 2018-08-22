@@ -30,6 +30,36 @@ def playGame(t_agent,maze,game_step,no_play,mode="play"):
     return goals
 
 
+def plotMap(t_agent,maze,plot_table,mode,title,epi):
+
+    if plot_table == "Q":
+        table = t_agent.Q
+    elif plot_table == "U":
+        table = t_agent.U
+    elif plot_table == "var":
+        table = t_agent.var
+    
+    if mode == "val_act" or mode == "val_func":
+        title += "_epi-{}th_optimal-value-{}".format(epi,plot_table)
+        t_agent.extractValue(table)
+        maze.visualiseValFunc(t_agent.value_func,t_agent.action_choice,mode,title)
+        
+    elif mode == "act":
+        
+        act_0 = "left"
+        act_1 = "up"
+        act_2 = "right"
+        act_3 = "down"
+        
+        acts = [act_0,act_1,act_2,act_3]
+        ori_title = title
+        
+        for act in acts:
+            title = ori_title
+            title += "_{}-epi_act-{}-action-value-{}".format(epi,act,plot_table)
+            maze.visualiseValFunc(table,None,act,title)
+        
+        
 def monteCarlo(t_agent,maze,game_step,no_play,discount):
         
     for row in range(maze._map_length):

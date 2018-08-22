@@ -128,7 +128,7 @@ class Tabular_Q_Agent:
         variance = self.M[state,action] - (self.Q[state,action]**2)
         self.var[state,action] = variance
 
-        self.U[state,action] = self.Q[state,action] + risk_level*(abs(variance))
+        self.U[state,action] = self.Q[state,action] + risk_level*(max(0,variance))
             
 
     ########### Epsilon Greedy ################
@@ -244,12 +244,15 @@ class Tabular_Q_Agent:
     def extractValue(self,table):
         
         for state in range(self.obs_n):
-            action_list = self.optimalAction(table,state,True)
 
+            action_list = self.optimalAction(table,state,True)
+            
             self.value_func[state] = table[state,action_list[0]]
             self.action_choice[state] = action_list
-        
 
+
+
+            
 
     
             
