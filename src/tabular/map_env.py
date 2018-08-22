@@ -159,7 +159,7 @@ class MapEnv:
 
                 if mark == "O":
                     for action in range(self._agent._action_space_n):
-                        # table[state][action] = val                          # yields better result, faster to converge
+                        table[state][action] = val                          # yields better result, faster to converge
                         # if val > 0.1:
                         #     table[state][action] = val + np.random.uniform(-0.1,0.1)
                         # else:

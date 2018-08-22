@@ -6,9 +6,9 @@ import numpy as np
 
 def main():
 
-    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
+    game = "windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
     game_type = "deterministic"                        # deterministic  # stochastic
-    start_row = 7
+    start_row = 2
     start_col = 0
     maze = me.makeMapEnv(game,start_row,start_col)
     # maze  = ms.MapStocEnv(game,start_row,start_col)
@@ -23,8 +23,8 @@ def main():
     discount_factor  = 0.9                          # the discount factor, 0.9 for gauss,epsilon
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
-    q_update = "vanilla"                     # vanilla # count # risk
-    exp_strategy = "boltzmann"               # "epsilon", "softmax", "greedy", "boltzmann"
+    q_update = "risk"                     # vanilla # count # risk
+    exp_strategy = "greedy"               # "epsilon", "softmax", "greedy", "boltzmann"
     update_policy = "greedy"               # "epsilon", "greedy", "boltzmann"
 
     ######### Exploration Strategy #########
@@ -52,7 +52,7 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 350
+    max_episode = 50
     run = 30                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
@@ -79,7 +79,7 @@ def main():
     
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 100                     # size of the window for moving average, use factor of 10
+    episode_window = 10                     # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
@@ -287,7 +287,7 @@ def main():
                max_episode,episode_window,filename,save,
                folder,fmt_col,label_data)
 
-    hp.saveGraphData(mov_data,mov_title) 
+    # hp.saveGraphData(mov_data,mov_title) 
 
 
     # '''  
