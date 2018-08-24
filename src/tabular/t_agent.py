@@ -206,11 +206,14 @@ class Tabular_Q_Agent:
         else:
             table = self.Q
 
-        # if self.update_policy == "greedy":
-        action = self.optimalAction(table,state)
+        if self.update_policy == "greedy":
+            action = self.optimalAction(table,state)
             
-        # elif self.update_policy == "epsilon":
-        #     action = self.epsilonGreedy(state,episode)
+        elif self.update_policy == "epsilon":
+            action = self.epsilonGreedy(state,episode)
+
+        elif self.update_policy == "boltzmann":
+            action = self.boltzmannStrat(state,episode)
         
         return action
         

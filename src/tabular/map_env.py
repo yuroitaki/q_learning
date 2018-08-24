@@ -203,9 +203,9 @@ class MapEnv:
 
         fig = plt.figure(figsize=(32,16))
         sns.heatmap(buffer_map,annot=self.annot_map,
-                    xticklabels=False,yticklabels=False,fmt='',
-                    annot_kws={"size":25},cmap="YlGnBu")
+                    fmt='',annot_kws={"size":25},cmap="YlGnBu")
 
+        sns.set(font_scale=2)
         plt.title(title,fontweight='bold',fontsize=15,y=1.035)
         plt.show()
                 
