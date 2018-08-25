@@ -41,7 +41,12 @@ ACTIONS = {
     0: "←",
     1: "↑",
     2: "→",
-    3: "↓"
+    3: "↓",
+    4: " ",
+    5: "◄",
+    6: "▲",
+    7: "►", 
+    8: "▼"
 }
 
 class MapEnv:
@@ -71,6 +76,9 @@ class MapEnv:
         
         self.computeTransition()
         self.annotateValMap()
+
+        self.act_record = []
+        self.ori_act_record = []
         
     def computeTransition(self):
         
@@ -96,7 +104,7 @@ class MapEnv:
                        trans.extend((new_state,reward,new_end_game))
 
 
-    def step(self,action):
+    def step(self,action,game_step):
 
         state  = self._agent._current_state
         self._agent.move(action)
@@ -107,6 +115,12 @@ class MapEnv:
                 return trans
         return self._trans[state][action]
 
+    
+    def resetActRecord(self):
+
+        self.act_record = []
+        self.ori_act_record = []
+        
     
     def randomSampling(self):
         
@@ -190,7 +204,7 @@ class MapEnv:
 
         self.convertValFunc(val_func,act_choice,val_annot)
 
-        if val_annot is "val_act" or val_annot == "val_func":
+        if val_annot is "val_act" or val_annot == "val_func" or val_annot == "act_rec":
             buffer_map = self.value_map
         elif val_annot == "left":
             buffer_map = self.left_map
@@ -208,7 +222,24 @@ class MapEnv:
         sns.set(font_scale=2)
         plt.title(title,fontweight='bold',fontsize=15,y=1.035)
         plt.show()
-                
+
+
+    def insertRealAct(self):
+
+        act_arr = np.full([self._obs_space_n,2],self._agent._action_space_n)
+        ori_act_list = self.ori_act_record
+        act_list = [i+self._agent._action_space_n+1 for i in self.act_record]
+        self.reset()
+
+        for i in range(len(act_list)):
+            state  = self._agent._current_state
+            act_arr[state,0] = act_list[i]
+            act_arr[state,1] = ori_act_list[i]
+            self._agent.move(act_list[i]-self._agent._action_space_n-1)
+
+        return act_arr
+        
+    
 
     def convertValFunc(self,val_func,act_choice,val_annot):
         
@@ -218,11 +249,11 @@ class MapEnv:
             mark = self._maps[row][col]
             
             if mark == "O":
-                if val_annot == "val_act":
+                if val_annot == "val_act" or val_annot == "act_rec":
                     self.value_map[row][col] = val_func[state]
                     action = self.convertActionToLetter(act_choice[state])
-                    self.annot_map[row][col] = action
-
+                    self.annot_map[row][col] = action            
+                    
                 else:
                     
                     if val_annot == "val_func":

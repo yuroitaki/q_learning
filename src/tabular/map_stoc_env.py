@@ -4,25 +4,34 @@ from tabular import map_env as me
 
 class MapStocEnv(me.MapEnv):
 
-    def __init__(self,map_name,start_r,start_c,maps=None):
+    def __init__(self,map_name,start_r,start_c,stoc_factor,maps=None):
 
         me.MapEnv.__init__(self,map_name,maps,start_r,start_c)
         self.main_count = 0
         self.rand_count = 0
-
+        self.stochasticity = stoc_factor
         
-    def step(self,action):
+        
+    def step(self,action,game_step):
 
         state = self._agent._current_state
-        self._agent.move(action)
-
-        main_action_prob = 0.7
+        self.ori_act_record.append(action)
+        
+        main_action_prob = self.stochasticity
         rand_num = np.random.uniform(0,1)
+
+        if len(self.act_record) > game_step + 1:
+            self.resetActRecord()
         
         if rand_num < main_action_prob:
             self.main_count += 1
+            self.act_record.append(action)
+            self._agent.move(action)
             return self._trans[state][action]
         else:
             action = np.random.choice(self._agent._action_space_n)
             self.rand_count += 1
+            self.act_record.append(action)
+            self._agent.move(action)
             return self._trans[state][action]
+

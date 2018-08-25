@@ -7,11 +7,12 @@ import numpy as np
 def main():
 
     game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
-    game_type = "deterministic"                        # deterministic  # stochastic
+    game_type = "stochastic-0.75"                        # deterministic  # stochastic
     start_row = 7
     start_col = 0
-    maze = me.makeMapEnv(game,start_row,start_col)
-    # maze  = ms.MapStocEnv(game,start_row,start_col)
+    # maze = me.makeMapEnv(game,start_row,start_col)
+    stoc_factor = 0.75                                   # the degree of anti-stochasticity
+    maze  = ms.MapStocEnv(game,start_row,start_col,stoc_factor)
     maze.reset()
     maze.render()
     
@@ -52,13 +53,13 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 350
+    max_episode = 4000
     run = 1                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
     monte_freq = 10                       # frequency of monte carlo sampling for each state-action
-    monte_test_freq = 50                  # frequency of checking variance table 
+    monte_test_freq = 200                  # frequency of checking variance table 
     
     if game == "windy_maze":
         fmt_col = "r"                        # mean line color
@@ -69,7 +70,7 @@ def main():
     folder = "final"              # windy_maze  # hard_windy_maze
 
     # tag_1 = "_init_1_{}_epi".format(max_episode)          # label for graph legend
-    tag_1 = "_vanilla"          # label for graph legend
+    tag_1 = "_count_const_epsilon"          # label for graph legend
     filename = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy,run)
     label_1 = tag_1[1:]
     mov_title = filename + tag_1      # filename for mov avg data pickle
@@ -81,16 +82,16 @@ def main():
     ########## Plot Map ##################
     
     vis_file = "{}-{}_{}-strat_{}-explore".format(game_type,game,q_update,exp_strategy)
-    plot_type_1 = "act"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
-    plot_table_1 = "Q"               # U # Q # var 
-    plot_type_2 = "act"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
-    plot_table_2 = "var"               # U # Q # var 
-    plot_type_3 = "val_act"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
+    plot_type_1 = "val_act"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
+    plot_table_1 = "U"               # U # Q # var 
+    plot_type_2 = "act_rec"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
+    plot_table_2 = "U"               # U # Q # var 
+    plot_type_3 = "val_func"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
     plot_table_3 = "U"               # U # Q # var 
     
     ####### Moving Average Graph Plotting #######
 
-    episode_window = 100               # size of the window for moving average, use factor of 10
+    episode_window = 500               # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                       # upper y bound
     min_r = 0.0                       # lower y bound
@@ -127,7 +128,7 @@ def main():
             while step_count <= game_step:
 
                 action = t_agent.act(state,episode)
-                new_state, reward, done = maze.step(action)
+                new_state, reward, done = maze.step(action,game_step)
                 
                 learning_rate = t_agent.learningRate(episode,learning_decay)   # can define power value
                                                                                # for diff decay rate
@@ -141,7 +142,7 @@ def main():
                 
                 # if episode > 20:    
                 #     print("Action = ",action)
-                #     maze.render()
+                # maze.render()
                 #     print("Q {} epi = \n".format(episode))
                 #     print(np.array_str(t_agent.Q,precision=2,suppress_small=True))
 
@@ -161,14 +162,12 @@ def main():
                 if done == True:
                     done_count += 1
                     break
-                
-        ############ Using Current Q Table to Play Games without further Update ##################
-        
-            # if(episode % test_freq == 0):
-            actual_goals = hp.playGame(t_agent,maze,game_step,no_play)
+
+            actual_goals = hp.playGame(t_agent,maze,game_step,no_play,episode,max_episode)
             actual_avg = sum(actual_goals) /no_play
             goals.append(actual_avg)
-
+            # print(maze.act_record)
+            
             # if episode == 0:
             #     print(np.array_str(t_agent.var,precision=2,suppress_small=True))
 
@@ -184,11 +183,11 @@ def main():
             if episode == 0:
                 hp.plotMap(t_agent,maze,plot_table_1,"val_func",vis_file,episode)
                 
-            if episode % monte_test_freq == 0:
+            # if episode % monte_test_freq == 0:
 
-                hp.plotMap(t_agent,maze,plot_table_1,plot_type_1,vis_file,episode)
-                hp.plotMap(t_agent,maze,plot_table_2,plot_type_2,vis_file,episode)
-                hp.plotMap(t_agent,maze,plot_table_3,plot_type_3,vis_file,episode)
+            #     hp.plotMap(t_agent,maze,plot_table_1,plot_type_1,vis_file,episode)
+            #     hp.plotMap(t_agent,maze,plot_table_2,plot_type_2,vis_file,episode)
+                # hp.plotMap(t_agent,maze,plot_table_3,plot_type_3,vis_file,episode)
 
                 # print("Action = ",action)
                 # maze.render()
@@ -237,9 +236,9 @@ def main():
 
         ########## Monte Carlo Comparison ####################
 
-        hp.plotMap(t_agent,maze,plot_table_1,plot_type_1,vis_file,episode)
+        # hp.plotMap(t_agent,maze,plot_table_1,plot_type_1,vis_file,episode)
         hp.plotMap(t_agent,maze,plot_table_2,plot_type_2,vis_file,episode)
-        hp.plotMap(t_agent,maze,plot_table_3,plot_type_3,vis_file,episode)
+        # hp.plotMap(t_agent,maze,plot_table_3,plot_type_3,vis_file,episode)
         
         # hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
 
@@ -357,7 +356,7 @@ def main():
     mov_avg_run = []
     
     for i in range(run_count):
-        rand_rewards = hp.playGame(t_agent,maze,game_cnt,num_epi,"rand")    # self-created env
+        rand_rewards = hp.playGame(t_agent,maze,game_cnt,num_epi,"rand")    # self-created env # deprecated
 
         rand_avg_rewards = sum(rand_rewards)/num_epi
         print(rand_avg_rewards)

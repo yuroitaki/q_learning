@@ -3,25 +3,29 @@ import scipy.stats as st
 import numpy as np
 import pickle
 
-def playGame(t_agent,maze,game_step,no_play,mode="play"):
+def playGame(t_agent,maze,game_step,no_play,epi,max_epi,mode="play"):
     
     goals = []
     
     for episode in range(no_play):        
         state = maze.reset()
+        maze.resetActRecord() 
         acc_reward = 0
         step_count = 0
-            
+    
         while step_count <= game_step:
 
             if mode == "play":
                 action = t_agent.play(state,episode)
             elif mode == "rand":
                 action = maze.randomSampling()
-            new_state, reward, done = maze.step(action)
+                
+            new_state, reward, done = maze.step(action,game_step)
             acc_reward += reward
             state = new_state
             step_count+=1
+            # if epi == max_epi - 1:
+            #     maze.render()
             
             if done == True:
                 break
@@ -43,6 +47,12 @@ def plotMap(t_agent,maze,plot_table,mode,title,epi):
         title += "_epi-{}th_optimal-value-{}".format(epi,plot_table)
         t_agent.extractValue(table)
         maze.visualiseValFunc(t_agent.value_func,t_agent.action_choice,mode,title)
+
+    elif mode == "act_rec":
+        title += "_epi-{}th_game-play".format(epi,plot_table)
+        t_agent.extractValue(table)
+        act_arr = maze.insertRealAct()
+        maze.visualiseValFunc(t_agent.value_func,act_arr,mode,title)
         
     elif mode == "act":
         
@@ -82,7 +92,7 @@ def monteCarlo(t_agent,maze,game_step,no_play,discount):
                             else:
                                 action = t_agent.play(state,episode)
 
-                            new_state, reward, done = maze.step(action)
+                            new_state, reward, done = maze.step(action,game_step)
 
                             true_goal += reward*(discount**step_count)
                             state = new_state
@@ -307,7 +317,7 @@ def confInterval(goal_run,conf_lvl,max_reward):
 if __name__ == "__main__":
 
     game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
-    game_type = "deterministic"                        # deterministic  # stochastic
+    game_type = "stochastic-0.5"                        # deterministic  # stochastic
     q_update = "various"                 # vanilla # count # risk
     exp_strategy = "various"               # "epsilon", "various", "greedy", "boltzmann"
     
@@ -322,7 +332,7 @@ if __name__ == "__main__":
     run = 30                                 # number of runs to train the agent
     max_episode = 4000
     
-    episode_window = 1000                 # size of the window for moving average, use factor of 10
+    episode_window = 500                 # size of the window for moving average, use factor of 10
     max_reward = 1.0
     max_r = 1.2                           # upper y bound
     min_r = 0.0                           # lower y bound
@@ -340,9 +350,9 @@ if __name__ == "__main__":
     # filename_5 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update_2,exp_strategy_1,run)
 
     
-    tag_1 = "_vanilla_{}_epi".format(max_episode)
-    tag_2 = "_init_1_{}_epi".format(max_episode)
-    # tag_3 = "_const_epsilon"
+    tag_1 = "_risk_vanilla"
+    tag_2 = "_greedy_init_1"
+    tag_3 = "_count_const_epsilon"
     # tag_4 = "_const_boltzmann"
     # tag_5 = "_init_1_{}_epi".format(max_episode)
     
@@ -359,7 +369,7 @@ if __name__ == "__main__":
     
     title_1 = filename_1 + tag_1
     title_2 = filename_2 + tag_2
-    title_3 = filename_3 
+    title_3 = filename_3 + tag_3
     # title_4 = filename_4 + tag_4
     # title_5 = filename_5 + tag_5
 
