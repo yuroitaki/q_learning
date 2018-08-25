@@ -1,5 +1,7 @@
 import numpy as np
 import sys
+import matplotlib.pyplot as plt
+import seaborn as sns
 from termcolor import cprint
 
 from tabular import map_agent as ag
@@ -22,7 +24,7 @@ MAPS = {
         ["O","O","O","O","O","X","O","X"],
     ],
     "risky_windy_maze":[
-        ["S","O","O","O","O","O","O","F"],
+        ["R","O","O","O","O","O","O","F"],
         ["X","X","O","X","X","O","X","O"],
         ["O","X","O","O","X","O","O","O"],
         ["O","O","O","O","O","O","O","X"],
@@ -34,6 +36,13 @@ MAPS = {
 
 }
 
+
+ACTIONS = {
+    0: "←",
+    1: "↑",
+    2: "→",
+    3: "↓"
+}
 
 class MapEnv:
     
@@ -50,9 +59,18 @@ class MapEnv:
         self._start_state = self.toState(self._start_row,self._start_col)
         
         self._agent = ag.MapAgent(self,self._start_state,self._start_row,self._start_col)
-        self._trans = {state: {action: [] for action in range(self._agent._action_space_n)} for state in range(self._obs_space_n)}                
-        self.computeTransition()
+        self._trans = {state: {action: [] for action in range(self._agent._action_space_n)} for state in range(self._obs_space_n)}
+
+        self.value_map = np.zeros([self._map_length,self._map_width])
+        self.annot_map = np.empty([self._map_length,self._map_width],dtype="U7")
+
+        self.left_map = np.zeros([self._map_length,self._map_width])
+        self.up_map = np.zeros([self._map_length,self._map_width])
+        self.right_map = np.zeros([self._map_length,self._map_width])
+        self.down_map = np.zeros([self._map_length,self._map_width])
         
+        self.computeTransition()
+        self.annotateValMap()
         
     def computeTransition(self):
         
@@ -85,7 +103,7 @@ class MapEnv:
         if self.map_name == "risky_windy_maze":
             if state == 1 and action == 0:
                 trans = self._trans[state][action]
-                trans[1] = self.reward("S")
+                trans[1] = self.reward("R")
                 return trans
         return self._trans[state][action]
 
@@ -108,7 +126,7 @@ class MapEnv:
 
         if mark == "F":
             return 1
-        elif mark == "S":
+        elif mark == "R":
             treshold_prob = 0.5
             rand_num = np.random.uniform(0,1)
             if rand_num > treshold_prob:
@@ -123,7 +141,7 @@ class MapEnv:
         
         return (row * self._map_width) + col
 
-
+    
     def reset(self):
 
         self._agent.updateState(self._start_row,self._start_col)
@@ -164,10 +182,100 @@ class MapEnv:
                         #     table[state][action] = val + np.random.uniform(-0.1,0.1)
                         # else:
                         #     table[state][action] = val + np.random.uniform(-0.1,0.1)
-                        table[state][action] = val + np.random.uniform()
+                        # table[state][action] = val + np.random.uniform()
 
             
+
+    def visualiseValFunc(self,val_func,act_choice,val_annot,title):
+
+        self.convertValFunc(val_func,act_choice,val_annot)
+
+        if val_annot is "val_act" or val_annot == "val_func":
+            buffer_map = self.value_map
+        elif val_annot == "left":
+            buffer_map = self.left_map
+        elif val_annot == "up":
+            buffer_map = self.up_map
+        elif val_annot == "right":
+            buffer_map = self.right_map
+        elif val_annot == "down":
+            buffer_map = self.down_map
+
+        fig = plt.figure(figsize=(32,16))
+        sns.heatmap(buffer_map,annot=self.annot_map,
+                    fmt='',annot_kws={"size":25},cmap="YlGnBu")
+
+        sns.set(font_scale=2)
+        plt.title(title,fontweight='bold',fontsize=15,y=1.035)
+        plt.show()
                 
+
+    def convertValFunc(self,val_func,act_choice,val_annot):
+        
+        row = 0
+        for state in range(self._obs_space_n):
+            col = state % self._map_width
+            mark = self._maps[row][col]
+            
+            if mark == "O":
+                if val_annot == "val_act":
+                    self.value_map[row][col] = val_func[state]
+                    action = self.convertActionToLetter(act_choice[state])
+                    self.annot_map[row][col] = action
+
+                else:
+                    
+                    if val_annot == "val_func":
+                        self.value_map[row][col] = val_func[state]
+                        value = np.around(val_func[state,0],3)
+                    
+                    elif val_annot == "left":
+                        self.left_map[row][col] = val_func[state,0]
+                        value = np.around(val_func[state,0],3)
+
+                    elif val_annot == "up":
+                        self.up_map[row][col] = val_func[state,1]
+                        value = np.around(val_func[state,1],3)
+
+                    elif val_annot == "right":
+                        self.right_map[row][col] = val_func[state,2]
+                        value = np.around(val_func[state,2],3)
+                        
+                    elif val_annot == "down":
+                        self.down_map[row][col] = val_func[state,3]
+                        value = np.around(val_func[state,3],3)
+
+                    self.annot_map[row][col] = str(value)
+                       
+                if row == self._start_row and col == self._start_col:
+                    self.annot_map[row][col] += " S" 
+
+            if col == self._map_width - 1:
+                row += 1
+
+
+    def annotateValMap(self):
+
+        for row in range(self._map_length):
+            for col in range(self._map_width):
+                mark = self._maps[row][col]
+                
+                if mark == "F":
+                    self.annot_map[row][col] = "G"
+                elif mark == "X":
+                    self.annot_map[row][col] = "T"
+                    
+                
+    def convertActionToLetter(self,act_list):
+
+        act_letter = ""
+        
+        for act in act_list:
+            act_letter += ACTIONS[act]
+
+        return act_letter
+        
+        
         
 def makeMapEnv(map_name,start_r=2,start_c=0,maps=None):
         

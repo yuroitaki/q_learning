@@ -29,7 +29,10 @@ class Tabular_Q_Agent:
 
         self.monte_goal = np.zeros([obs_n,act_n+1])
         self.monte_var = np.zeros([obs_n,act_n+1])
-                
+
+        self.value_func = np.zeros([obs_n,1])
+        self.action_choice = {state: [] for state in range(self.obs_n)}
+        
         self.initialiseTable()
 
         
@@ -125,7 +128,7 @@ class Tabular_Q_Agent:
         variance = self.M[state,action] - (self.Q[state,action]**2)
         self.var[state,action] = variance
 
-        self.U[state,action] = self.Q[state,action] + risk_level*(abs(variance))
+        self.U[state,action] = self.Q[state,action] + risk_level*(max(0,variance))
             
 
     ########### Epsilon Greedy ################
@@ -203,16 +206,19 @@ class Tabular_Q_Agent:
         else:
             table = self.Q
 
-        # if self.update_policy == "greedy":
-        action = self.optimalAction(table,state)
+        if self.update_policy == "greedy":
+            action = self.optimalAction(table,state)
             
-        # elif self.update_policy == "epsilon":
-        #     action = self.epsilonGreedy(state,episode)
+        elif self.update_policy == "epsilon":
+            action = self.epsilonGreedy(state,episode)
+
+        elif self.update_policy == "boltzmann":
+            action = self.boltzmannStrat(state,episode)
         
         return action
         
 
-    def optimalAction(self,table,state):
+    def optimalAction(self,table,state,skip_rand=None):
 
         max_Q = max(table[state,:-1])
         index = 0
@@ -223,6 +229,9 @@ class Tabular_Q_Agent:
                 index_list.append(index)
             index += 1
 
+        if skip_rand is not None:
+            return index_list
+        
         rand = np.random.choice(index_list)
         return rand
 
@@ -235,6 +244,18 @@ class Tabular_Q_Agent:
         return alpha
             
     
+    def extractValue(self,table):
+        
+        for state in range(self.obs_n):
+
+            action_list = self.optimalAction(table,state,True)
+            
+            self.value_func[state] = table[state,action_list[0]]
+            self.action_choice[state] = action_list
 
 
+
+            
+
+    
             
