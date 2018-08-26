@@ -42,7 +42,12 @@ def plotMap(t_agent,maze,plot_table,mode,title,epi):
         table = t_agent.U
     elif plot_table == "var":
         table = t_agent.var
-    
+    elif plot_table == "monte_Q":
+        table = t_agent.monte_goal
+    elif plot_table == "monte_var":
+        table = t_agent.monte_var
+
+        
     if mode == "val_act" or mode == "val_func":
         title += "_epi-{}th_optimal-value-{}".format(epi,plot_table)
         t_agent.extractValue(table)
@@ -109,21 +114,31 @@ def monteCarlo(t_agent,maze,game_step,no_play,discount):
 
 def monteDiff(monte,estimate):
 
-    delta = (monte - estimate)**2
+    delta = (monte[:,:-1] - estimate[:,:-1])**2
     expected_delta = delta.mean()
-    
-    return delta,expected_delta
+    return delta, expected_delta
     
 
-def evalMonteDiff(delta,num_epi,epi_window,title):
+def meanMonte(monte,estimate):
+
+    mean_monte = monte[:,:-1].mean()
+    mean_est = estimate[:,:-1].mean()
+
+    return mean_monte, mean_est
+
+
+def evalMonte(est,monte,num_epi,epi_window,title,labels,delta):
 
     x = [i for i in range(0,num_epi,epi_window)]
     fig = plt.figure(figsize=(32,16))
 
-    plt.plot(x,delta)
+    plt.plot(x,est,color="r",label="Estimated {}".format(labels))
+    plt.plot(x,monte,color="b",label="Monte {}".format(labels))
+    plt.plot(x,delta,color="g",label="Delta {}".format(labels))
     plt.title(title,fontweight='bold')
     plt.xlabel("Episode No.")
-    plt.ylabel("Delta btwn Monte Carlo and Estimate")
+    plt.ylabel("{} Mean Values".format(labels))
+    plt.legend()
     plt.show()
     plt.close()
 
@@ -142,11 +157,36 @@ def evalEpisode(goals,num_episode,episode_window,title):
     plt.close()
 
 
-def evalAvg(mean,err_up,err_down,max_r,min_r,num_episode,
-            episode_window,title,save,folder,fmt_col,label,epi_win_2=None):
+def plotDeltaRun(mov_est,mov_monte,mov_delta,max_lim,min_lim,
+                 max_episode,monte_test_freq,monte_title,save,
+                 folder,fmt_col,labels):
+    
+    mean_data = [mov_est[0],mov_monte[0],mov_delta[0]]
+    err_up_data = [mov_est[1],mov_monte[1],mov_delta[1]]
+    err_down_data = [mov_est[2],mov_monte[2],mov_delta[2]]
+    
+    label_est ="Estimated {}".format(labels)
+    label_monte ="Monte {}".format(labels)
+    label_delta ="Delta {}".format(labels)
+    label_data = [label_est,label_monte,label_delta]
 
-    x = [i for i in range(episode_window-1,num_episode)]
-    # x_special = [i for i in range(epi_win_2-1,num_episode)]
+    ylabels = "{} Mean Values".format(labels)
+    
+    evalAvg(mean_data,err_up_data,err_down_data,max_lim,min_lim,
+            max_episode,monte_test_freq,monte_title,save,folder,
+            fmt_col,label_data,True,ylabels)
+    
+
+    
+def evalAvg(mean,err_up,err_down,max_r,min_r,num_episode,
+            episode_window,title,save,folder,fmt_col,label,delta=False,
+            ylabels="Moving Average Score"):
+
+    if delta == False:
+        x = [i for i in range(episode_window-1,num_episode)]
+    else:
+        x = [i for i in range(0,num_episode,episode_window)]
+        
     fig = plt.figure(figsize=(32,16))            
 
     mean_0 = mean[0]
@@ -192,11 +232,11 @@ def evalAvg(mean,err_up,err_down,max_r,min_r,num_episode,
                     plt.plot(x,mean_4,color="g",label=label_4,alpha=0.8)
                     plt.fill_between(x,mean_4+err_up_4,mean_4-err_down_4,color="g",alpha=0.2)
 
-            
+        
     plt.ylim(min_r,max_r)
     plt.title(title,fontweight='bold')
     plt.xlabel("Episode No.")
-    plt.ylabel("Moving Average Score")
+    plt.ylabel(ylabels)
     plt.legend()
     
     plt.show()
