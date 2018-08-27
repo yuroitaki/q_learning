@@ -54,7 +54,7 @@ def main():
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
     max_episode = 2000
-    run = 1                                 # number of runs to train the agent
+    run = 30                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
@@ -182,8 +182,8 @@ def main():
             actual_avg = sum(actual_goals) /no_play
             goals.append(actual_avg)
 
-            if episode == 0:
-                hp.plotMap(t_agent,maze,plot_table_1,"val_func",vis_file,episode)
+            # if episode == 0:
+            #     hp.plotMap(t_agent,maze,plot_table_1,"val_func",vis_file,episode)
                 
             if episode % monte_test_freq == 0:
 
@@ -248,7 +248,7 @@ def main():
         ########## result for Each Training Run #############
 
         # hp.plotMap(t_agent,maze,plot_table_1,plot_type_1,vis_file,episode)
-        hp.plotMap(t_agent,maze,plot_table_2,plot_type_2,vis_file,episode)
+        # hp.plotMap(t_agent,maze,plot_table_2,plot_type_2,vis_file,episode)
         # hp.plotMap(t_agent,maze,plot_table_3,plot_type_3,vis_file,episode)
         
         
@@ -331,20 +331,20 @@ def main():
 
     ################## Delta Eval ##############################
     
-    # mov_q_est = hp.confInterval(q_est_run,conf_lvl,max_reward)
-    # mov_q_monte = hp.confInterval(q_monte_run,conf_lvl,max_reward)
-    # mov_q_delta = hp.confInterval(q_delta_run,conf_lvl,max_reward)
-    # mov_var_est = hp.confInterval(var_est_run,conf_lvl,initial_M)
-    # mov_var_monte = hp.confInterval(var_monte_run,conf_lvl,initial_M)
-    # mov_var_delta = hp.confInterval(var_delta_run,conf_lvl,initial_M)
+    mov_q_est = hp.confInterval(q_est_run,conf_lvl,max_reward)
+    mov_q_monte = hp.confInterval(q_monte_run,conf_lvl,max_reward)
+    mov_q_delta = hp.confInterval(q_delta_run,conf_lvl,max_reward)
+    mov_var_est = hp.confInterval(var_est_run,conf_lvl,initial_M)
+    mov_var_monte = hp.confInterval(var_monte_run,conf_lvl,initial_M)
+    mov_var_delta = hp.confInterval(var_delta_run,conf_lvl,initial_M)
 
-    # hp.plotDeltaRun(mov_q_est,mov_q_monte,mov_q_delta,max_r,min_r,
-    #                 max_episode,monte_test_freq,q_monte_title,save,
-    #                 folder,fmt_col,q_label)
+    hp.plotDeltaRun(mov_q_est,mov_q_monte,mov_q_delta,max_r,min_r,
+                    max_episode,monte_test_freq,q_monte_title,save,
+                    folder,fmt_col,q_label)
 
-    # hp.plotDeltaRun(mov_var_est,mov_var_monte,mov_var_delta,max_var,min_var,
-    #                 max_episode,monte_test_freq,var_monte_title,save,
-    #                 folder,fmt_col,var_label)
+    hp.plotDeltaRun(mov_var_est,mov_var_monte,mov_var_delta,max_var,min_var,
+                    max_episode,monte_test_freq,var_monte_title,save,
+                    folder,fmt_col,var_label)
 
 
     # '''  
