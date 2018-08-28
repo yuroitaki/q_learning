@@ -149,7 +149,7 @@ def evalEpisode(goals,num_episode,episode_window,title):
     x = [i for i in range(episode_window-1,num_episode)]
     fig = plt.figure(figsize=(32,16))
 
-    plt.scatter(x,goals,marker='x',c='r')
+    plt.plot(x,goals,color='r')
     plt.title(title,fontweight='bold')
     plt.xlabel("Episode No.")
     plt.ylabel("Moving Average Score")

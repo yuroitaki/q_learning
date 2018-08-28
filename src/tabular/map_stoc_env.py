@@ -4,9 +4,11 @@ from tabular import map_env as me
 
 class MapStocEnv(me.MapEnv):
 
-    def __init__(self,map_name,start_r,start_c,anti_stoc_factor,maps=None):
+    def __init__(self,map_name,start_r,start_c,anti_stoc_factor,maps=None,
+                 stoc_state=None,stoc_act=None,stoc_tres=None,low_r=None,high_r=None):
 
-        me.MapEnv.__init__(self,map_name,maps,start_r,start_c)
+        me.MapEnv.__init__(self,map_name,maps,start_r,start_c,
+                           stoc_state,stoc_act,stoc_tres,low_r,high_r)
         self.main_count = 0
         self.rand_count = 0
         self.anti_stoc_factor = anti_stoc_factor

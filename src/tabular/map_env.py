@@ -51,7 +51,9 @@ ACTIONS = {
 
 class MapEnv:
     
-    def __init__(self,map_name,maps,start_r,start_c):
+    def __init__(self,map_name,maps,start_r,start_c,
+                 stoc_state=None,stoc_act=None,
+                 stoc_tres=None,low_r=None,high_r=None):
 
         if(maps==None):
             maps = MAPS[map_name]
@@ -74,11 +76,19 @@ class MapEnv:
         self.right_map = np.zeros([self._map_length,self._map_width])
         self.down_map = np.zeros([self._map_length,self._map_width])
         
+        self.act_record = []
+        self.ori_act_record = []
+
+        self.stoc_state = stoc_state
+        self.stoc_act = stoc_act
+        self.stoc_tres = stoc_tres
+        self.low_r = low_r
+        self.high_r = high_r
+        
         self.computeTransition()
         self.annotateValMap()
 
-        self.act_record = []
-        self.ori_act_record = []
+        
         
     def computeTransition(self):
         
@@ -109,12 +119,18 @@ class MapEnv:
         state  = self._agent._current_state
         self._agent.move(action)
         if self.map_name == "risky_windy_maze":
-            if state == 1 and action == 0:
-                trans = self._trans[state][action]
-                trans[1] = self.reward("R")
-                return trans
+            if state == self.stoc_state and action == self.stoc_act:
+                return self.stocReward(state,action)
+            
         return self._trans[state][action]
 
+
+    def stocReward(self,state,action):
+
+        trans = self._trans[state][action]
+        trans[1] = self.reward("R")
+        return trans
+        
     
     def resetActRecord(self):
 
@@ -130,7 +146,7 @@ class MapEnv:
     
     def endGame(self,mark):
         
-        if mark in "XFS":
+        if mark in "XFR":
             return True
         else:
             return False
@@ -141,12 +157,12 @@ class MapEnv:
         if mark == "F":
             return 1
         elif mark == "R":
-            treshold_prob = 0.5
+            treshold_prob = self.stoc_tres
             rand_num = np.random.uniform(0,1)
             if rand_num > treshold_prob:
-                return 0
+                return self.low_r
             else:
-                return 2
+                return self.high_r
         else:
             return 0
 
@@ -295,6 +311,8 @@ class MapEnv:
                     self.annot_map[row][col] = "G"
                 elif mark == "X":
                     self.annot_map[row][col] = "T"
+                elif mark == "R":
+                    self.annot_map[row][col] = "R"
                     
                 
     def convertActionToLetter(self,act_list):
@@ -308,9 +326,11 @@ class MapEnv:
         
         
         
-def makeMapEnv(map_name,start_r=2,start_c=0,maps=None):
+def makeMapEnv(map_name,start_r=2,start_c=0,maps=None,
+               stoc_state=None,stoc_act=None,stoc_tres=None,low_r=None,high_r=None):
         
-    maze = MapEnv(map_name,maps,start_r,start_c)
+    maze = MapEnv(map_name,maps,start_r,start_c,
+                  stoc_state,stoc_act,stoc_tres,low_r,high_r)
     return maze
 
     
