@@ -25,8 +25,8 @@ MAPS = {
     ],
     "risky_windy_maze":[
         ["R","O","O","O","O","O","O","F"],
-        ["X","X","O","X","X","O","X","O"],
-        ["O","X","O","O","X","O","O","O"],
+        ["X","X","X","X","O","X","X","X"],
+        ["O","X","O","X","O","X","O","O"],
         ["O","O","O","O","O","O","O","X"],
         ["O","X","X","X","X","O","O","X"],
         ["O","O","O","O","X","O","X","O"],
@@ -129,6 +129,7 @@ class MapEnv:
 
         trans = self._trans[state][action]
         trans[1] = self.reward("R")
+        
         return trans
         
     
