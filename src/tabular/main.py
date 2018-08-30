@@ -6,8 +6,8 @@ import numpy as np
 
 def main():
 
-    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
-    game_type = "stochastic"                        # deterministic  # stochastic
+    game = "risky_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
+    game_type = "deterministic"                        # deterministic  # stochastic
     start_row = 7
     start_col = 0
 
@@ -17,16 +17,16 @@ def main():
 
     ###### Stochastic Env ############
     
-    anti_stoc_factor = 0.75                                   # the degree of anti-stochasticity
-    maze  = ms.MapStocEnv(game,start_row,start_col,anti_stoc_factor)
+    # anti_stoc_factor = 0.75                                   # the degree of anti-stochasticity
+    # maze  = ms.MapStocEnv(game,start_row,start_col,anti_stoc_factor)
 
     ###### Stochastic Reward Env ######
     
-    stoc_state = 1
+    stoc_state = 2
     stoc_act = 0
     stoc_tres = 0.5
-    low_r = 1
-    high_r = 1
+    low_r = 0.9
+    high_r = 4
     maps = None
 
     goal_state_1 = 6
@@ -34,8 +34,8 @@ def main():
     # goal_state_2 = 15
     # goal_act_2 = 1
 
-    # maze = me.makeMapEnv(game,start_row,start_col,maps,
-    #                      stoc_state,stoc_act,stoc_tres,low_r,high_r)
+    maze = me.makeMapEnv(game,start_row,start_col,maps,
+                         stoc_state,stoc_act,stoc_tres,low_r,high_r)
 
     ###### Stochastic Reward in Stochastic Env ########
     # maze = ms.MapStocEnv(game,start_row,start_col,anti_stoc_factor,
@@ -63,7 +63,7 @@ def main():
     # params below are used interchangeably between epsilon and boltzmann 
 
     epsilon_type = "constant"           #"linear"   "exponential"   "constant" 
-    epsilon_const = 0.5                  # use a constant epsilon policy = 0.5, boltzmann uses 0.1
+    epsilon_const = 0.25                  # use a constant epsilon policy = 0.5, boltzmann uses 0.1
 
     epsilon_rate = 0.3               # the polynomial for exponential decay
     max_epsilon = 1.0                      # maximum epsilon value which decays with episodes
@@ -73,10 +73,10 @@ def main():
     ##########################################
     
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
-    risk_level = 1.0                       # risk seeking level for risk training
+    risk_level = 1000.0                       # risk seeking level for risk training
 
     initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
-    initial_M = 0.9                       # an example uses 1/(1-discount_factor) for initial_Q
+    initial_M = 3.9                       # an example uses 1/(1-discount_factor) for initial_Q
     
     ######### Experiments & Records #########
     """
@@ -84,7 +84,7 @@ def main():
 
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
-    max_episode = 4000
+    max_episode = 5000
     run = 30                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
@@ -99,7 +99,8 @@ def main():
     folder = "final"              # windy_maze  # hard_windy_maze
 
     # tag_1 = "_init_1_{}_epi".format(max_episode)          # label for graph legend
-    tag_1 = "_vanilla-risk-1"          # label for graph legend
+    # tag_1 = "_greedy_init_4"          # label for graph legend
+    tag_1 = "_vanilla_risk_1000"          # label for graph legend
     filename = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy,run)
     label_1 = tag_1[1:]
     mov_title = filename + tag_1      # filename for mov avg data pickle
@@ -206,8 +207,8 @@ def main():
             actual_avg = sum(actual_goals)/no_play
             goals.append(actual_avg)
 
-            # if episode == 0:
-            #     hp.plotMap(t_agent,maze,plot_table_1,"val_func",vis_file,episode)
+            if episode == 0:
+                hp.plotMap(t_agent,maze,plot_table_1,"val_func",vis_file,episode)
                 
             # if episode % monte_test_freq == 0:
 
@@ -278,7 +279,7 @@ def main():
                 
         ########## result for Each Training Run #############
 
-        # hp.plotMap(t_agent,maze,plot_table_1,plot_type_1,vis_file,episode)
+        hp.plotMap(t_agent,maze,plot_table_1,plot_type_1,vis_file,episode)
         # hp.plotMap(t_agent,maze,plot_table_2,plot_type_2,vis_file,episode)
         # hp.plotMap(t_agent,maze,plot_table_3,plot_type_3,vis_file,episode)
         
@@ -325,10 +326,10 @@ def main():
         # print(np.array_str(t_agent.visit_count,suppress_small=True))
         # print("No. of plays under {0} game steps = ".format(game_step),done_count)
 
-        # print("Count to R =")
-        # print(t_agent.visit_count[stoc_state,stoc_act],"\n")
-        # print ("Count to G =")
-        # print(t_agent.visit_count[goal_state_1,goal_act_1],"\n")
+        print("Count to R =")
+        print(t_agent.visit_count[stoc_state,stoc_act],"\n")
+        print ("Count to G =")
+        print(t_agent.visit_count[goal_state_1,goal_act_1],"\n")
         
         #####################################################################
         
@@ -343,29 +344,29 @@ def main():
         
         ############### Calc the Moving Average of Rewards ####################
 
-        mov_avg = hp.calcMovingAverage(goals,episode_window)
-        mov_avg_run.append(mov_avg)
+        # mov_avg = hp.calcMovingAverage(goals,episode_window)
+        # mov_avg_run.append(mov_avg)
         
         # hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     # to print the current run mov avg
         
 
     ######################### end of Multiple Runs ########################################
 
-    mov_data = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
+    # mov_data = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
  
-    mean_data = [mov_data[0]]
-    err_up_data = [mov_data[1]]
-    err_down_data = [mov_data[2]]
-    label_data= [label_1]
+    # mean_data = [mov_data[0]]
+    # err_up_data = [mov_data[1]]
+    # err_down_data = [mov_data[2]]
+    # label_data= [label_1]
     
-    hp.evalAvg(mean_data,err_up_data,err_down_data,max_r,min_r,
-               max_episode,episode_window,filename,save,
-               folder,fmt_col,label_data)
+    # hp.evalAvg(mean_data,err_up_data,err_down_data,max_r,min_r,
+    #            max_episode,episode_window,filename,save,
+    #            folder,fmt_col,label_data)
 
-    hp.saveGraphData(mov_data,mov_title) 
+    # hp.saveGraphData(mov_data,mov_title) 
 
 
-    ################## Delta Eval ##############################
+    ################## delta Eval ##############################
     
     # mov_q_est = hp.confInterval(q_est_run,conf_lvl,max_reward)
     # mov_q_monte = hp.confInterval(q_monte_run,conf_lvl,max_reward)

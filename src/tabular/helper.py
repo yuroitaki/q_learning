@@ -201,16 +201,16 @@ def evalAvg(mean,err_up,err_down,max_r,min_r,num_episode,
         err_up_1 = err_up[1]
         err_down_1 = err_down[1]
         label_1 = label[1]
-        plt.plot(x,mean_1,color="g",label=label_1,alpha=0.8)
-        plt.fill_between(x,mean_1+err_up_1,mean_1-err_down_1,color="g",alpha=0.2)
+        plt.plot(x,mean_1,color="r",label=label_1,alpha=0.8)
+        plt.fill_between(x,mean_1+err_up_1,mean_1-err_down_1,color="r",alpha=0.2)
 
         if len_mean > 2:
             mean_2 = mean[2]
             err_up_2 = err_up[2]
             err_down_2 = err_down[2]
             label_2 = label[2]
-            plt.plot(x,mean_2,color="r",label=label_2,alpha=0.8)
-            plt.fill_between(x,mean_2+err_up_2,mean_2-err_down_2,color="r",alpha=0.2)
+            plt.plot(x,mean_2,color="g",label=label_2,alpha=0.8)
+            plt.fill_between(x,mean_2+err_up_2,mean_2-err_down_2,color="g",alpha=0.2)
 
 
             if len_mean > 3:
@@ -354,13 +354,13 @@ def confInterval(goal_run,conf_lvl,max_reward):
 
 if __name__ == "__main__":
 
-    game = "hard_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
-    game_type = "stochastic"                        # deterministic  # stochastic
-    q_update = "risk"                 # vanilla # count # risk
+    game = "risky_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
+    game_type = "deterministic"                        # deterministic  # stochastic
+    q_update = "various"                 # vanilla # count # risk
     exp_strategy = "greedy"               # "epsilon", "various", "greedy", "boltzmann"
     
     q_update_1 = "risk"
-    # q_update_2 = "vanilla"
+    q_update_2 = "vanilla"
     # q_update_3 = "count"
     
     exp_strategy_1 = "greedy"               # "epsilon", "various", "greedy", "boltzmann"
@@ -368,11 +368,11 @@ if __name__ == "__main__":
     # exp_strategy_3 = "boltzmann" 
     
     run = 30                                 # number of runs to train the agent
-    max_episode = 4000
+    max_episode = 5000
     
     episode_window = 500                 # size of the window for moving average, use factor of 10
-    max_reward = 1.0
-    max_r = 1.2                           # upper y bound
+    max_reward = 4.0
+    max_r = 4.2                           # upper y bound
     min_r = 0.0                           # lower y bound
 
     fmt_col = "b"
@@ -382,17 +382,18 @@ if __name__ == "__main__":
     filename = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy,run)
     
     filename_1 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update_1,exp_strategy_1,run)
-    filename_2 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update_1,exp_strategy_1,run)
-    filename_3 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update_1,exp_strategy_1,run)
+    filename_2 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update_2,exp_strategy_1,run)
+    # filename_3 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update_1,exp_strategy_1,run)
     # filename_4 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update_1,exp_strategy_1,run)
     # filename_5 = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update_1,exp_strategy_1,run)
 
     
-    # tag_1 = "_greedy_init_4"
-    # tag_2 = "_vanilla-risk-1"
-    tag_1 = "_vanilla-risk-1"
-    tag_2 = "_vanilla-risk-10"
-    tag_3 = "_vanilla-risk-100"
+
+    tag_1 = "_vanilla_risk_1000"
+    tag_2 = "_greedy_init_4"
+    # tag_1 = "_vanilla-risk-1"
+    # tag_2 = "_vanilla-risk-10"
+    # tag_3 = "_vanilla-risk-100"
     
 
     ####### Solo Exploration ##############
@@ -405,14 +406,14 @@ if __name__ == "__main__":
 
     label_1 = tag_1[1:]
     label_2 = tag_2[1:]
-    label_3 = tag_3[1:]
+    # label_3 = tag_3[1:]
     # label_4 = tag_4[1:]
     # label_5 = tag_5[1:] 
     
     
     title_1 = filename_1 + tag_1
     title_2 = filename_2 + tag_2
-    title_3 = filename_3 + tag_3
+    # title_3 = filename_3 + tag_3
     # title_4 = filename_4 + tag_4
     # title_5 = filename_5 + tag_5
 
@@ -441,20 +442,20 @@ if __name__ == "__main__":
     
     mean_1, err_up_1, err_down_1 = readGraphData(title_1)
     mean_2, err_up_2, err_down_2 = readGraphData(title_2)
-    mean_3, err_up_3, err_down_3 = readGraphData(title_3)
+    # mean_3, err_up_3, err_down_3 = readGraphData(title_3)
     # mean_4, err_up_4, err_down_4 = readGraphData(title_4)
     # mean_5, err_up_5, err_down_5 = readGraphData(title_5)
     
-    # mean = [mean_1,mean_2]
-    # err_up = [err_up_1,err_up_2]
-    # err_down = [err_down_1,err_down_2]
-    # label = [label_1,label_2]
+    mean = [mean_1,mean_2]
+    err_up = [err_up_1,err_up_2]
+    err_down = [err_down_1,err_down_2]
+    label = [label_1,label_2]
 
 
-    mean = [mean_1,mean_2,mean_3]
-    err_up = [err_up_1,err_up_2,err_up_3]
-    err_down = [err_down_1,err_down_2,err_down_3]
-    label = [label_1,label_2,label_3]
+    # mean = [mean_1,mean_2,mean_3]
+    # err_up = [err_up_1,err_up_2,err_up_3]
+    # err_down = [err_down_1,err_down_2,err_down_3]
+    # label = [label_1,label_2,label_3]
 
     
     # mean = [mean_1,mean_2,mean_3,mean_4]
@@ -477,7 +478,7 @@ if __name__ == "__main__":
     # filename += label_1
     # filename += tag_2
 
-    filename += "_various_risk_factor"
+    # filename += "_various_risk_factor"
     
     evalAvg(mean,err_up,err_down,max_r,min_r,
             max_episode,episode_window,filename,save,
