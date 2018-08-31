@@ -25,7 +25,7 @@ def main():
     stoc_state = 2
     stoc_act = 0
     stoc_tres = 0.5
-    low_r = 0.9
+    low_r = 0
     high_r = 4
     maps = None
 
@@ -53,6 +53,7 @@ def main():
     act_n = maze._agent._action_space_n
     
     discount_factor  = 0.9                          # the discount factor, 0.9 for gauss,epsilon
+    learning_rate = 0.1
     learning_decay = 0.5                    # 0.5 for count based # to decay learning rate
 
     q_update = "risk"                     # vanilla # count # risk
@@ -63,9 +64,9 @@ def main():
     # params below are used interchangeably between epsilon and boltzmann 
 
     epsilon_type = "constant"           #"linear"   "exponential"   "constant" 
-    epsilon_const = 0.25                  # use a constant epsilon policy = 0.5, boltzmann uses 0.1
+    epsilon_const = 0.1                  # use a constant epsilon policy = 0.5, boltzmann uses 0.1
 
-    epsilon_rate = 0.3               # the polynomial for exponential decay
+    epsilon_rate = 0.9            # the polynomial for exponential decay
     max_epsilon = 1.0                      # maximum epsilon value which decays with episodes
     min_epsilon = 0.00001
     diminishing = True               # False to not use the discounted weight for noise in late episodes
@@ -73,7 +74,7 @@ def main():
     ##########################################
     
     beta_cnt_based = 0.5                      # count-based exploration constant for exploration bonus
-    risk_level = 1000.0                       # risk seeking level for risk training
+    risk_level = 1.0                       # risk seeking level for risk training
 
     initial_Q = 0.0                       # used 0.0 for risk seeking and epsilon, 0.5 for count
     initial_M = 3.9                       # an example uses 1/(1-discount_factor) for initial_Q
@@ -85,7 +86,7 @@ def main():
     """
     param_set = "{}_".format(exp_strategy)              # to record different sets of params used
     max_episode = 5000
-    run = 30                                 # number of runs to train the agent
+    run = 1                                 # number of runs to train the agent
     game_step = 100                         # number of game time steps before termination
     no_play = 1                          # number of episodes for the test run
     test_freq = 1                        # frequency of testing, i.e. every nth episode
@@ -99,8 +100,8 @@ def main():
     folder = "final"              # windy_maze  # hard_windy_maze
 
     # tag_1 = "_init_1_{}_epi".format(max_episode)          # label for graph legend
-    # tag_1 = "_greedy_init_4"          # label for graph legend
-    tag_1 = "_vanilla_risk_1000"          # label for graph legend
+    # tag_1 = "_boltzmann-init-4*"          # label for graph legend
+    tag_1 = "_vanilla-risk-7point5*"          # label for graph legend
     filename = "{}-{}_{}-strat_{}-explore_{}-runs".format(game_type,game,q_update,exp_strategy,run)
     label_1 = tag_1[1:]
     mov_title = filename + tag_1      # filename for mov avg data pickle
@@ -114,9 +115,9 @@ def main():
     vis_file = "{}-{}_{}-strat_{}-explore".format(game_type,game,q_update,exp_strategy)
     plot_type_1 = "val_act"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
     plot_table_1 = "U"               # U # Q # var # monte_Q # monte_var
-    plot_type_2 = "val_act"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
+    plot_type_2 = "act"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
     plot_table_2 = "Q"               # U # Q # var # monte_Q # monte_var
-    plot_type_3 = "val_act"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
+    plot_type_3 = "act"         # "val_act": arrow and val func  # "val_func"  # "act": q-val 
     plot_table_3 = "var"               # U # Q # var # monte_Q # monte_var
     
     ####### Moving Average Graph Plotting #######
@@ -173,7 +174,7 @@ def main():
                 action = t_agent.act(state,episode)
                 new_state, reward, done = maze.step(action,game_step)
                 
-                learning_rate = t_agent.learningRate(episode,learning_decay)   # can define power value
+                learning_rate = t_agent.learningRate(episode,learning_rate,learning_decay)   # can define power value
                                                                                # for diff decay rate
                 if(q_update == "vanilla"):
                     t_agent.train(new_state,reward,state,action,learning_rate)           # normal training
@@ -280,8 +281,8 @@ def main():
         ########## result for Each Training Run #############
 
         hp.plotMap(t_agent,maze,plot_table_1,plot_type_1,vis_file,episode)
-        # hp.plotMap(t_agent,maze,plot_table_2,plot_type_2,vis_file,episode)
-        # hp.plotMap(t_agent,maze,plot_table_3,plot_type_3,vis_file,episode)
+        hp.plotMap(t_agent,maze,plot_table_2,plot_type_2,vis_file,episode)
+        hp.plotMap(t_agent,maze,plot_table_3,plot_type_3,vis_file,episode)
         
         
         ########## Monte Carlo Comparison ####################
