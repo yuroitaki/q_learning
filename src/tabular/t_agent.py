@@ -236,10 +236,10 @@ class Tabular_Q_Agent:
         return rand
 
 
-    def learningRate(self,episode,power=0.85):
+    def learningRate(self,episode,rate,power=0.85):
 
         # alpha = 1/((episode+1)**power)
-        alpha = 0.7
+        alpha = rate
     
         return alpha
             
@@ -254,6 +254,9 @@ class Tabular_Q_Agent:
             self.action_choice[state] = action_list
 
 
+
+
+            
 
             
 

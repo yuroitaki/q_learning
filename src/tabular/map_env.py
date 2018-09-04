@@ -24,9 +24,9 @@ MAPS = {
         ["O","O","O","O","O","X","O","X"],
     ],
     "risky_windy_maze":[
-        ["R","O","O","O","O","O","O","F"],
-        ["X","X","O","X","X","O","X","O"],
-        ["O","X","O","O","X","O","O","O"],
+        ["X","R","O","O","O","O","O","F"],
+        ["X","X","X","X","O","X","X","X"],
+        ["O","X","O","X","O","X","O","O"],
         ["O","O","O","O","O","O","O","X"],
         ["O","X","X","X","X","O","O","X"],
         ["O","O","O","O","X","O","X","O"],
@@ -41,12 +41,19 @@ ACTIONS = {
     0: "←",
     1: "↑",
     2: "→",
-    3: "↓"
+    3: "↓",
+    4: " ",
+    5: "◄",
+    6: "▲",
+    7: "►", 
+    8: "▼"
 }
 
 class MapEnv:
     
-    def __init__(self,map_name,maps,start_r,start_c):
+    def __init__(self,map_name,maps,start_r,start_c,
+                 stoc_state=None,stoc_act=None,
+                 stoc_tres=None,low_r=None,high_r=None):
 
         if(maps==None):
             maps = MAPS[map_name]
@@ -69,8 +76,19 @@ class MapEnv:
         self.right_map = np.zeros([self._map_length,self._map_width])
         self.down_map = np.zeros([self._map_length,self._map_width])
         
+        self.act_record = []
+        self.ori_act_record = []
+
+        self.stoc_state = stoc_state
+        self.stoc_act = stoc_act
+        self.stoc_tres = stoc_tres
+        self.low_r = low_r
+        self.high_r = high_r
+        
         self.computeTransition()
         self.annotateValMap()
+
+        
         
     def computeTransition(self):
         
@@ -96,17 +114,36 @@ class MapEnv:
                        trans.extend((new_state,reward,new_end_game))
 
 
-    def step(self,action):
+    def step(self,action,game_step):
 
         state  = self._agent._current_state
+        self.act_record.append(action)
+        self.ori_act_record.append(action)
+
+        if len(self.act_record) > game_step + 1:
+            self.resetActRecord()
+
         self._agent.move(action)
         if self.map_name == "risky_windy_maze":
-            if state == 1 and action == 0:
-                trans = self._trans[state][action]
-                trans[1] = self.reward("R")
-                return trans
+            if state == self.stoc_state and action == self.stoc_act:
+                return self.stocReward(state,action)
+            
         return self._trans[state][action]
 
+
+    def stocReward(self,state,action):
+
+        trans = self._trans[state][action]
+        trans[1] = self.reward("R")
+        
+        return trans
+        
+    
+    def resetActRecord(self):
+
+        self.act_record = []
+        self.ori_act_record = []
+        
     
     def randomSampling(self):
         
@@ -116,7 +153,7 @@ class MapEnv:
     
     def endGame(self,mark):
         
-        if mark in "XFS":
+        if mark in "XFR":
             return True
         else:
             return False
@@ -127,12 +164,12 @@ class MapEnv:
         if mark == "F":
             return 1
         elif mark == "R":
-            treshold_prob = 0.5
+            treshold_prob = self.stoc_tres
             rand_num = np.random.uniform(0,1)
             if rand_num > treshold_prob:
-                return 0
+                return self.low_r
             else:
-                return 2
+                return self.high_r
         else:
             return 0
 
@@ -190,7 +227,7 @@ class MapEnv:
 
         self.convertValFunc(val_func,act_choice,val_annot)
 
-        if val_annot is "val_act" or val_annot == "val_func":
+        if val_annot is "val_act" or val_annot == "val_func" or val_annot == "act_rec":
             buffer_map = self.value_map
         elif val_annot == "left":
             buffer_map = self.left_map
@@ -208,7 +245,24 @@ class MapEnv:
         sns.set(font_scale=2)
         plt.title(title,fontweight='bold',fontsize=15,y=1.035)
         plt.show()
-                
+
+
+    def insertRealAct(self):
+
+        act_arr = np.full([self._obs_space_n,2],self._agent._action_space_n)
+        ori_act_list = self.ori_act_record
+        act_list = [i+self._agent._action_space_n+1 for i in self.act_record]
+        self.reset()
+
+        for i in range(len(act_list)):
+            state  = self._agent._current_state
+            act_arr[state,0] = act_list[i]
+            act_arr[state,1] = ori_act_list[i]
+            self._agent.move(act_list[i]-self._agent._action_space_n-1)
+
+        return act_arr
+        
+    
 
     def convertValFunc(self,val_func,act_choice,val_annot):
         
@@ -218,11 +272,11 @@ class MapEnv:
             mark = self._maps[row][col]
             
             if mark == "O":
-                if val_annot == "val_act":
+                if val_annot == "val_act" or val_annot == "act_rec":
                     self.value_map[row][col] = val_func[state]
                     action = self.convertActionToLetter(act_choice[state])
-                    self.annot_map[row][col] = action
-
+                    self.annot_map[row][col] = action            
+                    
                 else:
                     
                     if val_annot == "val_func":
@@ -264,6 +318,8 @@ class MapEnv:
                     self.annot_map[row][col] = "G"
                 elif mark == "X":
                     self.annot_map[row][col] = "T"
+                elif mark == "R":
+                    self.annot_map[row][col] = "R"
                     
                 
     def convertActionToLetter(self,act_list):
@@ -277,9 +333,11 @@ class MapEnv:
         
         
         
-def makeMapEnv(map_name,start_r=2,start_c=0,maps=None):
+def makeMapEnv(map_name,start_r=2,start_c=0,maps=None,
+               stoc_state=None,stoc_act=None,stoc_tres=None,low_r=None,high_r=None):
         
-    maze = MapEnv(map_name,maps,start_r,start_c)
+    maze = MapEnv(map_name,maps,start_r,start_c,
+                  stoc_state,stoc_act,stoc_tres,low_r,high_r)
     return maze
 
     
