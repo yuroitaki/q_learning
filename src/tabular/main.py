@@ -6,7 +6,7 @@ import numpy as np
 
 def main():
 
-    game = "risky_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
+    game = "risk_windy_maze"          # windy_maze   # hard_windy_maze  # risky_windy_maze
     game_type = "deterministic"                        # deterministic  # stochastic
     start_row = 7
     start_col = 0

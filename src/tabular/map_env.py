@@ -117,6 +117,12 @@ class MapEnv:
     def step(self,action,game_step):
 
         state  = self._agent._current_state
+        self.act_record.append(action)
+        self.ori_act_record.append(action)
+
+        if len(self.act_record) > game_step + 1:
+            self.resetActRecord()
+
         self._agent.move(action)
         if self.map_name == "risky_windy_maze":
             if state == self.stoc_state and action == self.stoc_act:
