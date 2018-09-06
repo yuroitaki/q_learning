@@ -1,3 +1,9 @@
+#####################################################################
+# This script is part of the Environment class which controls the agent's
+# actions, as well as keeping track of its current position in the game.
+#####################################################################
+
+
 import numpy as np
 
 class MapAgent:

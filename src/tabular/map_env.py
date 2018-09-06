@@ -1,3 +1,10 @@
+#####################################################################
+# This script is the main file for the Environment class. It contains
+# the map layout, the transition dynamic calculation, heat-map computation,
+# map visualisation etc.
+#####################################################################
+
+
 import numpy as np
 import sys
 import matplotlib.pyplot as plt
@@ -214,14 +221,9 @@ class MapEnv:
 
                 if mark == "O":
                     for action in range(self._agent._action_space_n):
-                        table[state][action] = val                          # yields better result, faster to converge
-                        # if val > 0.1:
-                        #     table[state][action] = val + np.random.uniform(-0.1,0.1)
-                        # else:
-                        #     table[state][action] = val + np.random.uniform(-0.1,0.1)
-                        # table[state][action] = val + np.random.uniform()
+                        table[state][action] = val       # uniform initialisation
+                        # table[state][action] = val + np.random.uniform()  # random initialisation
 
-            
 
     def visualiseValFunc(self,val_func,act_choice,val_annot,title):
 
@@ -238,7 +240,7 @@ class MapEnv:
         elif val_annot == "down":
             buffer_map = self.down_map
 
-        fig = plt.figure(figsize=(32,16))
+        fig = plt.figure(figsize=(7,5))
         sns.heatmap(buffer_map,annot=self.annot_map,
                     fmt='',annot_kws={"size":25},cmap="YlGnBu")
 

@@ -1,3 +1,9 @@
+#####################################################################
+# This script contains various helper functions for different usages,
+# including evaluation test, moving average graph plotting, heat map
+# visualisation, and Monte Carlo sampling.  
+#####################################################################
+
 import matplotlib.pyplot as plt
 import scipy.stats as st
 import numpy as np

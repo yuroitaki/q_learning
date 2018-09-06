@@ -1,3 +1,11 @@
+#####################################################################
+# This script contains the Agent class. The class is responsible for
+# implementing Q-learning with various exploration strategies, i.e.
+# risk-seeking, count-based, epsilon-greedy, and boltzmann. The policy
+# is also derived from this class.
+#####################################################################
+
+
 import numpy as np
 
 class Tabular_Q_Agent:
@@ -52,7 +60,7 @@ class Tabular_Q_Agent:
         
         init_var = self.M[:,:-1] - (self.Q[:,:-1]**2)
         self.var[:,:-1] = init_var 
-        self.U[:,:-1] = self.Q[:,:-1] + risk_level*(abs(init_var))
+        self.U[:,:-1] = self.Q[:,:-1] + risk_level*(init_var)
         
         
     def act(self,state,episode):
@@ -81,7 +89,7 @@ class Tabular_Q_Agent:
         return action    
 
 
-    ########## Normal Exploration Bonus ##################
+    ########## Normal Q-Learning ##################
     
     def train(self,new_state,reward,state,action,learning_rate,exploration_bonus=0):
         
@@ -104,8 +112,6 @@ class Tabular_Q_Agent:
     ####### Risk Seeking Exploration ###########
     
     def risk_train(self,new_state,reward,state,action,risk_level,epi,learning_rate):
-        
-        # new_action = self.play(new_state,epi)
         
         if self.update_policy == "greedy":
             new_action = self.optimalAction(self.U,new_state)
@@ -191,11 +197,6 @@ class Tabular_Q_Agent:
         prob_bolt /= sum_prob
         action = np.random.choice(self.act_n,p=prob_bolt)
 
-        # last_epi = self.max_epi - episode
-        # if(last_epi <= 10):
-        #     print("Probability of actions for state {} = {}".format(state,prob_bolt))
-        #     print("Action chosen = {}".format(action))
-        
         return action
 
     
@@ -238,7 +239,6 @@ class Tabular_Q_Agent:
 
     def learningRate(self,episode,rate,power=0.85):
 
-        # alpha = 1/((episode+1)**power)
         alpha = rate
     
         return alpha

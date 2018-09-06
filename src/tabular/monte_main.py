@@ -1,14 +1,3 @@
-#####################################################################
-# This script is the main driver file to train the agent in the
-# environment. All environments and exploration strategies can be
-# implemented here by commenting out the relevant section of
-# implementation. All the hyperparameters or parameters required
-# for training can be inserted and tested here, as well as those for
-# moving average evaluation and heat map plotting. A second main driver,
-# monte_main, which is very similar to this one is made for the purpose
-# of Monte Carlo sampling.
-#####################################################################
-
 from tabular import map_env as me
 from tabular import map_stoc_env as ms
 from tabular import t_agent as ta
@@ -93,13 +82,13 @@ def main():
     
     ######### Experiments & Records #########
 
-    max_episode = 300
+    max_episode = 2000
     run = 5                                 # number of runs to train the agent
     game_step = 100                         # number of time steps before termination
     no_play = 1                            # number of episodes for the eval test run
     test_freq = 1                          # frequency of testing, i.e. every nth episode
     monte_freq = 30                       # number of monte carlo sampling for each state-action
-    monte_test_freq = 30                  # frequency of monte carlo sampling, every nth episode
+    monte_test_freq = 1000                  # frequency of monte carlo sampling, every nth episode
                                           # also used for heat map plotting 
 
     ########## Saving Files ############
@@ -136,9 +125,16 @@ def main():
     
     ########################################
     
-    ################ Q-Learning ##################    
-
-    mov_avg_run = []                          # accumulation of "goals" across multiple runs
+    ################ Q-Learning ##################
+    
+    ####### Monte Carlo Sampling List ############
+    
+    q_est_run = []                            
+    q_monte_run = []
+    var_est_run = []                      
+    var_monte_run = []
+    q_delta_run = []
+    var_delta_run = []
 
     ##############################################
     
@@ -153,6 +149,17 @@ def main():
         t_agent.initialiseU(risk_level)
             
         goals = []                          # accumulation of rewards
+
+        ####### Monte Carlo Sampling List ############
+        
+        q_est_list = []                        
+        q_monte_list = []
+        var_est_list = []                      
+        var_monte_list = []
+        q_delta_list= []
+        var_delta_list = []
+
+        ###############################################
         
         done_count  = 0                    
 
@@ -187,10 +194,26 @@ def main():
             actual_goals = hp.playGame(t_agent,maze,game_step,no_play,episode,max_episode)
             actual_avg = sum(actual_goals)/no_play
             goals.append(actual_avg)
-
+            
             if episode % monte_test_freq == 0:
 
-                ############ Heat Map ##############
+                 ########## Monte Carlo Sampling ############
+                
+                hp.monteCarlo(t_agent,maze,game_step,monte_freq,discount_factor)
+
+                q_monte, q_est = hp.meanMonte(t_agent.monte_goal,t_agent.Q)
+                var_monte, var_est = hp.meanMonte(t_agent.monte_var,t_agent.var)
+                q_delta_full, q_delta = hp.monteDiff(t_agent.monte_goal,t_agent.Q)
+                var_delta_full, var_delta = hp.monteDiff(t_agent.monte_var,t_agent.var)
+                
+                q_est_list.append(q_est)
+                q_monte_list.append(q_monte)
+                var_est_list.append(var_est)
+                var_monte_list.append(var_monte)
+                q_delta_list.append(q_delta)
+                var_delta_list.append(var_delta)
+                
+                 ############ Heat Map ##############
 
                 hp.plotMap(t_agent,maze,plot_table_1,plot_type_1,vis_file,episode)
                 hp.plotMap(t_agent,maze,plot_table_2,plot_type_2,vis_file,episode)
@@ -205,7 +228,27 @@ def main():
         hp.plotMap(t_agent,maze,plot_table_2,plot_type_2,vis_file,episode)
         hp.plotMap(t_agent,maze,plot_table_3,plot_type_3,vis_file,episode)
         
-                
+        
+        ########## Monte Carlo Comparison ####################
+
+        q_est_run.append(q_est_list)                        
+        q_monte_run.append(q_monte_list)                        
+        var_est_run.append(var_est_list)                                              
+        var_monte_run.append(var_monte_list)                        
+        q_delta_run.append(q_delta_list)                        
+        var_delta_run.append(var_delta_list)                        
+        
+        q_label = "Q"
+        var_label = "Var"
+        q_monte_title = q_label + "_delta_" + filename
+        var_monte_title = var_label + "_delta_" + filename
+
+        ############## Single Run Monte Plotting ################
+        
+        hp.evalMonte(q_est_list,q_monte_list,max_episode,monte_test_freq,q_monte_title,q_label,q_delta_list)
+        hp.evalMonte(var_est_list,var_monte_list,max_episode,monte_test_freq,var_monte_title,var_label,var_delta_list)
+       
+        
         ################### Average Result of Each Training Run #####################
         
         no_testing = max_episode/test_freq
@@ -214,36 +257,27 @@ def main():
         print("Average score across testing episodes:", avg_score)
         maze.render()
         print("Current run count = ",run_cnt)
-
-        
-        ############### Calc the Moving Average of Rewards ####################
-
-        mov_avg = hp.calcMovingAverage(goals,episode_window)
-        mov_avg_run.append(mov_avg)
-
-        ############## Plot the Performance of Each Run ####################
-        
-        hp.evalEpisode(mov_avg,max_episode,episode_window,filename)     
-        
+    
 
     ######################### End of Multiple Runs ########################################
+    
+    ################## Multi-Run Monte Plot ##############################
+    
+    mov_q_est = hp.confInterval(q_est_run,conf_lvl,max_reward)
+    mov_q_monte = hp.confInterval(q_monte_run,conf_lvl,max_reward)
+    mov_q_delta = hp.confInterval(q_delta_run,conf_lvl,max_reward)
+    mov_var_est = hp.confInterval(var_est_run,conf_lvl,initial_M)
+    mov_var_monte = hp.confInterval(var_monte_run,conf_lvl,initial_M)
+    mov_var_delta = hp.confInterval(var_delta_run,conf_lvl,initial_M)
 
-    ################## Performance of Multiple Run #########################
-    
-    mov_data = hp.confInterval(mov_avg_run,conf_lvl,max_reward)
- 
-    mean_data = [mov_data[0]]
-    err_up_data = [mov_data[1]]
-    err_down_data = [mov_data[2]]
-    label_data= [label_1]
-    
-    hp.evalAvg(mean_data,err_up_data,err_down_data,max_r,min_r,
-               max_episode,episode_window,filename,save,
-               folder,fmt_col,label_data)
+    hp.plotDeltaRun(mov_q_est,mov_q_monte,mov_q_delta,max_r,min_r,
+                    max_episode,monte_test_freq,q_monte_title,save,
+                    folder,fmt_col,q_label)
 
-    ########### Save Pickle for Graph Data ####################
-    
-    # hp.saveGraphData(mov_data,mov_title) 
+    hp.plotDeltaRun(mov_var_est,mov_var_monte,mov_var_delta,max_var,min_var,
+                    max_episode,monte_test_freq,var_monte_title,save,
+                    folder,fmt_col,var_label)
+
    
 
 if __name__ == "__main__":
