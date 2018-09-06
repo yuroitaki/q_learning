@@ -24,7 +24,7 @@ training and evaluation. A second main driver, [monte_main.py](src/tabular/monte
 ### Environment class 
 [map_env.py](src/tabular/map_env.py) &
 [map_agent.py](src/tabular/map_agent.py) contain the implementation of
-our environment. It has a child class, which is its stochastic version. [map_stoc_env.py](src/tabular/map_stoc_env.py).
+our environment. It has a child class, which is its stochastic version [map_stoc_env.py](src/tabular/map_stoc_env.py).
 
 ### Helper function 
 [helper.py](src/tabular/helper.py) contains all the utility codes.
@@ -47,4 +47,3 @@ or,
 ```
 python -m tabular.monte_main
 ```
-
