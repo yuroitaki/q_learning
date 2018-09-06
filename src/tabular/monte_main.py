@@ -1,3 +1,9 @@
+#####################################################################
+# This script is used for Monte Carlo samplig. For details, please
+# refer to main.py.
+#####################################################################
+
+
 from tabular import map_env as me
 from tabular import map_stoc_env as ms
 from tabular import t_agent as ta

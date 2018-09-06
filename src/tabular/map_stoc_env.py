@@ -1,3 +1,9 @@
+#####################################################################
+# This script is the child class of the Environment class, which is
+# the stochastic environment.
+#####################################################################
+
+
 import numpy as np
 
 from tabular import map_env as me
