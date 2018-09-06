@@ -1,4 +1,4 @@
-name: rl3
+name: rl
 dependencies:
 - python=3
 - numpy
