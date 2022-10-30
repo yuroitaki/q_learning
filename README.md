@@ -1,3 +1,6 @@
+# Q-Learning
+Experiment to compare different reinforcement learning exploration strategy, focused on the risk-seeking notion.
+
 ## Set-Up
 
 Install Anaconda, then run the following
