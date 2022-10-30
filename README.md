@@ -1,5 +1,5 @@
 # Q-Learning
-Experiment to compare different reinforcement learning exploration strategy, focused on the risk-seeking notion.
+Experiment to compare different Reinforcement Learning exploration strategy, focused on the risk-seeking notion.
 
 ## Set-Up
 
